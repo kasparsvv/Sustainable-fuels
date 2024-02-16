@@ -1,0 +1,4 @@
+# This is the github repository for the matlab model of the combustion engine
+# To upload the changes, use push. To download the latest changes, use pull. 
+# Save all of your files in one folder to avoid losses
+# Watch this video if its unclear on how matlab with git works: https://www.youtube.com/watch?v=O7A27uMduo0
