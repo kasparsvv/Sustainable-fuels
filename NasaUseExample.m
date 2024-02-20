@@ -36,3 +36,4 @@ subplot(1,2,2)
 plot(T,Cp./Cv,'-','LineWidth',2);
 legend(Sp(iAlc).Name);
 xlabel('T [K]');ylabel('\gamma [-]');
+%test
