@@ -53,7 +53,7 @@ VolumeEthanol = Evalue/100;
 VolumeGasoline = (100-Evalue)/100;
 
 MassEthanol = 789*VolumeEthanol;            % Ethanol = 789 kg/m^3
-MassGasoline = 754*VolumeGasoline;          % Gasoline = 754 kg/m^3   
+MassGasoline = 749*VolumeGasoline;          % Gasoline = 749 kg/m^3   
 %Mass fractions
 MassFractionEthanol = MassEthanol/(MassEthanol+MassGasoline);
 MassFractionGasoline = MassGasoline/(MassEthanol+MassGasoline);
