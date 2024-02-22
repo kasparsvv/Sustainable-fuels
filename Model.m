@@ -25,7 +25,7 @@ Evalue = 10;          % E-number of the fuel
 if Evalue == 0;
     Qlhv = 46.4e6;            
 elseif Evalue == 5;
-    Qlhv = 1;               % Could not find a value on the internet
+    Qlhv = 45.58e6;               % Could not find a value on the internet, this is an approximation
 elseif Evalue == 10;
     Qlhv = 43.54e6;
 end;
