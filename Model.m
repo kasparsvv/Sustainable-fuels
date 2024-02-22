@@ -13,24 +13,55 @@ B=1;                % Bore (m)
 l=1;                % Length of the connecting rod (m)
 rc=1;               % Compression ratio (-)
 Runiv=8.314472;     % Universal gas constant (J / mol·K)
-CaS=1;              % Crank angle at start of combustion
-CaD=1;              % Combustion duration (in terms of crank angle)
+CaS=210;            % Crank angle at start of combustion
+CaD=225-210;        % Combustion duration (in terms of crank angle)
 n=3;                % Wiebe form factor, Project handbook says 3 is often used
 a=5;                % Wiebe efficiency factor, Project handbook says 5 is often used
 
 
-% Select species for the case at hand
-cFuel = 'Gasoline';
-iSp = myfind({Sp.Name},{cFuel,'O2','CO2','H2O','N2'});                      % Find indexes of these species
-SpS=Sp(iSp);                                                                % Subselection of the database in the order according to {'Gasoline','O2','CO2','H2O','N2'}
-NSp = length(SpS);
-Mi = [SpS.Mass];
-% Fuel composition
-Xfuel = [0 0 0 0 0];                                                        % Order is important. Note that these are molefractions
-Mfuel = Xfuel*Mi';                                                          % Row times Column = inner product 
-Yfuel = Xfuel.*Mi/Mfuel;                                                    % Vector. times vector is Matlab's way of making an elementwise multiplication
+Evalue = 10;          % E-number of the fuel
 
-Rg = Runiv/Mfuel;   %Specific gas constant
+% Qlvh = Amount of energy per mass of fuel (j)
+if Evalue == 0;
+    Qlhv = 46.4e6;            
+elseif Evalue == 5;
+    Qlhv = 1;               % Could not find a value on the internet
+elseif Evalue == 10;
+    Qlhv = 43.54e6;
+end;
+
+
+% Composition Ethanol
+cFuelEthanol = 'C2H5OH';        %Ethanol
+iSpEthanol = myfind({Sp.Name},{cFuelEthanol,'O2','CO2','H2O','N2'});                      % Find indexes of these species
+SpSEthanol=Sp(iSpEthanol);                                                                % Subselection of the database in the order according to {'Gasoline','O2','CO2','H2O','N2'}
+NSpEthanol = length(SpSEthanol);
+MiEthanol = [SpSEthanol.Mass];
+YfuelEthanol = [1 0 0 0 0];
+MEthanol = YfuelEthanol*MiEthanol';                                                       % Molar mass of ethanol
+
+% Composition Gasoline
+cFuelGasoline = 'Gasoline';
+iSpGasoline = myfind({Sp.Name},{cFuelGasoline,'O2','CO2','H2O','N2'});                    % Find indexes of these species
+SpSGasoline=Sp(iSpGasoline);                                                              % Subselection of the database in the order according to {'Gasoline','O2','CO2','H2O','N2'}
+NSpGasoline = length(SpSGasoline);
+MiGasoline = [SpSGasoline.Mass];
+YfuelGasoline = [1 0 0 0 0];
+MGasoline = YfuelGasoline*MiGasoline';                                                    % Molar mass of gasoline
+
+VolumeEthanol = Evalue/100;
+VolumeGasoline = (100-Evalue)/100;
+
+MassEthanol = 789*VolumeEthanol;            % Ethanol = 789 kg/m^3
+MassGasoline = 754*VolumeGasoline;          % Gasoline = 754 kg/m^3   
+%Mass fractions
+MassFractionEthanol = MassEthanol/(MassEthanol+MassGasoline);
+MassFractionGasoline = MassGasoline/(MassEthanol+MassGasoline);
+
+MFuel = MassFractionEthanol*MEthanol + MassFractionGasoline*MGasoline;      % Molar mass of the fuel mixture
+mfuel = 1;               %Fuel mass inside the cylinder, used for Qmodel, not defined yet
+
+Rg = Runiv/MFuel;   %Specific gas constant
 
 
 % Initialisation
