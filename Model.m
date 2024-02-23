@@ -30,7 +30,6 @@ elseif Evalue == 10;
     Qlhv = 43.54e6;
 end;
 
-
 % Composition Ethanol
 cFuelEthanol = 'C2H5OH';        %Ethanol
 iSpEthanol = myfind({Sp.Name},{cFuelEthanol,'O2','CO2','H2O','N2'});                      % Find indexes of these species
@@ -99,3 +98,14 @@ for i=2:NSteps,                         % Calculate values for 1 cycle
 
     Cv=sum(Yi.*Cvi); % heat cap at current T
 end;
+
+function Vcyl(B, d, V_c)
+    % Inputs:
+    %   B: bore
+    %   d: distance term
+    %   V_c: constant term
+    % Output:
+    %   Vcyl: volume of the cylinder
+
+    Vcyl = pi * (B/2)^2 * d + V_c;
+end
