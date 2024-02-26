@@ -30,6 +30,8 @@ elseif Evalue == 10;
     Qlhv = 43.54e6;
 end;
 
+
+
 % Composition Ethanol
 cFuelEthanol = 'C2H5OH';        %Ethanol
 iSpEthanol = myfind({Sp.Name},{cFuelEthanol,'O2','CO2','H2O','N2'});                      % Find indexes of these species
@@ -38,6 +40,21 @@ NSpEthanol = length(SpSEthanol);
 MiEthanol = [SpSEthanol.Mass];
 YfuelEthanol = [1 0 0 0 0];
 MEthanol = YfuelEthanol*MiEthanol';                                                       % Molar mass of ethanol
+
+%Composition Air
+Xair = [0 0.21 0 0 0.79];                                                   % Order is important. Note that these are molefractions
+MAir = Xair*MiEthanol';                                                     % Row times Column = inner product 
+Yair = Xair.*MiEthanol/MAir;                                                % Vector. times vector is Matlab's way of making an elementwise multiplication. Note that these are Mass Fractions
+
+%C2H5OH + 3 O2 → 2 CO2 + 3 H2O
+MolesEthanol = 1/MEthanol;                  % Amount of moles Ethanol per mass unit
+MolesOxygenE = MolesEthanol*3;              % Amount of moles Oxygen for this amount of Ethanol
+MassOxygenE = MolesOxygenE*MiEthanol(2);    % The mass of this oxygen
+MassAirE = MassOxygenE + (MassOxygenE/Yair(2))*Yair(5); % Mass of air (Oxygen + Nitrogen)
+AirFuelRatioEthanol = MassAirE / 1;  % Air-fuel ratio for Ethanol
+
+
+
 
 % Composition Gasoline
 cFuelGasoline = 'Gasoline';
