@@ -8,15 +8,21 @@ load(TdataBase);
 %Constants
 P0=1.01235e5 ;      % Ambient Pressure (pa)
 T0=293;             % Ambient Temparature (K)
-S=1;                % Stroke (m)
-B=1;                % Bore (m)
-l=1;                % Length of the connecting rod (m)
-rc=1;               % Compression ratio (-)
+rc=8.5;               % Compression ratio (-)
 Runiv=8.314472;     % Universal gas constant (J / mol·K)
 CaS=210;            % Crank angle at start of combustion
 CaD=225-210;        % Combustion duration (in terms of crank angle)
 n=3;                % Wiebe form factor, Project handbook says 3 is often used
 a=5;                % Wiebe efficiency factor, Project handbook says 5 is often used
+
+S = 0.055; % [m] Stroke
+r  = 1/2 * S; % [m] Lenght of crankshaft
+l = 0.0842; % [m] Lenght of the connecting rod
+B = 0.0677; % [m] Bore dimension
+TDC = 0.003; % [m] Top dead center
+BDC = S + TDC; % [m] Bottom dead center
+V_c = pi/4 * B^2 * TDC; % [m63] Compression volume (will change)
+P_atm  = 1; % [Bar] Atmospheric pressure (assumed for now)
 
 
 Evalue = 10;          % E-number of the fuel
@@ -128,13 +134,16 @@ for i=2:NSteps,                         % Calculate values for 1 cycle
     Cv=sum(Yi.*Cvi); % heat cap at current T
 end;
 
-function Vcyl(B, d, V_c)
-    % Inputs:
-    %   B: bore
-    %   d: distance term
-    %   V_c: constant term
-    % Output:
-    %   Vcyl: volume of the cylinder
+function V_cyl = Vcyl(Ca, S, B, l, rc)
 
-    Vcyl = pi * (B/2)^2 * d + V_c;
+    % Kinematic relations
+    V_d = (pi/4) * B^2 * S; % [m^3] Displacement volume
+    V_c = V_d/(rc - 1); % [m^3] Clearance volume
+    r  = 1/2 * S; % [m] Lenght of crankshaft
+
+    x = r * cosd(Ca) + sqrt(l^2 - r^2 * sind(Ca).^2); % [m] x postion of piston as a function of theta
+    d = l + r - x; % [m] Distance of pistion from TDC as a function of theta
+
+    V_cyl = pi * (B/2)^2 * d + V_c; % [m^3] Free cylinder volume as a function of theta
+    
 end
