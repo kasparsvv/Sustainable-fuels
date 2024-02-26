@@ -1,23 +1,25 @@
 %% Defining constants
 
 S = 0.055; % [m] Stroke
-r  = 1/2 * S; % [m] Lenght of crankshaft
-l = 0.0842; % [m] Lenght of the connecting rod
+r  = 1/2 * S; % [m] Length of crankshaft
+l = 0.0842; % [m] Length of the connecting rod
 B = 0.0677; % [m] Bore dimension
 TDC = 0.003; % [m] Top dead center
 BDC = S + TDC; % [m] Bottom dead center
 V_d = (pi/4) * B^2 * S; % [m^3] Displacement volume
+rc = 10; % Compression ratio (assumed for now)
 V_c = V_d/(rc - 1); % [m^3] Clearance volume
 P_atm  = 1; % [Bar] Atmospheric pressure (assumed for now)
 
 %% Defining the kinematic equations of the engine as functions of theta
 
-theta_deg = linspace(0, 180, 181); % Intake stroke in degrees. Lasts from -15 to 215
-theta_rad = deg2rad(theta_deg); % Intake stroke in radians for ease of use
+Ca = linspace(0, 180, 181); % Intake stroke in degrees.
 
-x = r * cos(theta_rad) + sqrt(l^2 - r^2 * sin(theta_rad).^2); % [m] x postion of piston as a function of theta
-d = l + r - x; % [m] Distance of pistion from TDC as a function of theta
-Vcyl = pi * (B/2)^2 * d + V_c; % [m^3] Free cylinder volume as a function of theta
+for i = 1:length(Ca)
+    x(i) = r * cosd(Ca(i)) + sqrt(l^2 - r^2 * sind(Ca(i))^2); % [m] x position of piston as a function of theta
+    d(i) = l + r - x(i); % [m] Distance of piston from TDC as a function of theta
+    Vcyl(i) = pi * (B/2)^2 * d(i) + V_c; % [m^3] Free cylinder volume as a function of theta
+end
 
 P = ones(1, 181) * P_atm; % Constant pressure throughout intake stroke
 
