@@ -65,6 +65,15 @@ MiGasoline = [SpSGasoline.Mass];
 YfuelGasoline = [1 0 0 0 0];
 MGasoline = YfuelGasoline*MiGasoline';                                                    % Molar mass of gasoline
 
+% 2 C8H18 + 25 O2 → 16 CO2 + 18 H2O     chemical reaction for octane
+MolesGasoline = 1/MGasoline;                  % Amount of moles gasoline per mass unit
+MolesOxygenG = MolesGasoline*12.5;              % Amount of moles Oxygen for this amount of gasoline
+MassOxygenG = MolesOxygenG*MiGasoline(2);    % The mass of this oxygen
+MassAirG = MassOxygenG + (MassOxygenG/Yair(2))*Yair(5); % Mass of air (Oxygen + Nitrogen)
+AirFuelRatioGasoline = MassAirG / 1;         % Air-fuel ratio for Gasoline 
+
+
+
 VolumeEthanol = Evalue/100;
 VolumeGasoline = (100-Evalue)/100;
 
@@ -77,7 +86,10 @@ MassFractionGasoline = MassGasoline/(MassEthanol+MassGasoline);
 MFuel = MassFractionEthanol*MEthanol + MassFractionGasoline*MGasoline;      % Molar mass of the fuel mixture
 mfuel = 1;               %Fuel mass inside the cylinder, used for Qmodel, not defined yet
 
-Rg = Runiv/MFuel;   %Specific gas constant
+AirFuelRatio = MassFractionEthanol*AirFuelRatioEthanol + MassFractionGasoline*AirFuelRatioGasoline;     % Air-fuel ratio for the fuel mixture 
+MFuelAir = MFuel + AirFuelRatio*MFuel;          % Mass of air = Air-Fuel ratio * Mass of the fuel
+
+Rg = Runiv/MFuelAir;   %Specific gas constant
 
 
 % Initialisation
