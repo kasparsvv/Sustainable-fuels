@@ -11,7 +11,7 @@ P_atm  = 1; % [Bar] Atmospheric pressure
 
 %% Defining the kinematic equations of the engine as functions of theta
 
-theta_deg = linspace(180, 0, 181); % Intake stroke in degrees. Lasts from -15 to 215
+theta_deg = linspace(0, 180, 181); % Intake stroke in degrees. Lasts from -15 to 215
 theta_rad = deg2rad(theta_deg); % Intake stroke in radians for ease of use
 
 x = r * cos(theta_rad) + sqrt(l^2 - r^2 * sin(theta_rad).^2); % [m] x postion of piston as a function of theta
