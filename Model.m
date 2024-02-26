@@ -134,6 +134,9 @@ for i=2:NSteps,                         % Calculate values for 1 cycle
     Cv=sum(Yi.*Cvi); % heat cap at current T
 end;
 
+
+
+
 function V_cyl = Vcyl(Ca, S, B, l, rc)
 
     % Kinematic relations
