@@ -138,7 +138,7 @@ m(1) = p(1)*V(1)/Rg/T(1);
 % Cp = Yi_before * Cpi';
 
 % gamma = Cp/Cv;
-Cv = 2;
+Cv = 1000;
 
 gamma = 1.4;
 C1 = p(1)*V(1)^gamma;       % Poisson relations
@@ -171,12 +171,12 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         p(i)=m(i)*Rg*T(i)/V(i);                 % Gaslaw
 
         % for n=1:NSp
-        % Cvi(n) =CvNasa(T(1),SpS(n));           % Get Cv from Nasa-table
+        % Cvi(n) =CvNasa(T(i),SpS(n));           % Get Cv from Nasa-table
         % end
         % Cv = Yi_after * Cvi';
 
         % for n=1:NSp
-        % Cpi(n) =CpNasa(T(1),SpS(n));           % Get Cp from Nasa-table
+        % Cpi(n) =CpNasa(T(i),SpS(n));           % Get Cp from Nasa-table
         % end
         % Cp = Yi_after * Cvi';
 
