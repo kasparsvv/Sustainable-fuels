@@ -212,6 +212,14 @@ end
 %% Plot pV-diagram
 
 figure;
+plot(Ca, V);
+xlabel('Crank angle');
+ylabel('Volume (m^3)');
+title('Crank angle VC Volume');
+grid on;
+
+
+figure;
 plot(V, p);
 xlabel('Volume (m^3)');
 ylabel('Pressure (Pa)');
