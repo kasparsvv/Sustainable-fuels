@@ -118,3 +118,5 @@ TotalMassAirE10 = TotalMassAirE10Gasoline + TotalMassAirE10Ethanol;
 
 %AF ratio for E10
 AirFuelRatioE10 = TotalMassAirE10/1;
+
+save("AFcalculations.mát")
