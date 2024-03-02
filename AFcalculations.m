@@ -4,8 +4,9 @@ addpath(relativepath_to_generalfolder);
 TdataBase=fullfile('General','Nasa','NasaThermalDatabase');
 load(TdataBase);
 
-DensityGasoline = 749; %kg/m^3
-DensityEthanol = 789; %kg/m^3
+DensityGasoline = 705; %kg/m^3
+DensityEthanol = 789; %kg/m^3 according to Discussion Page(690-720)
+DensityAir = 1.293; %kg/m^3
 
 % Composition Ethanol
 cFuelEthanol = 'C2H5OH';        %Ethanol
