@@ -1,15 +1,6 @@
 %% Defining constants
-
-S = 0.055; % [m] Stroke
-r  = 1/2 * S; % [m] Lenght of crankshaft
-l = 0.0842; % [m] Lenght of the connecting rod
-B = 0.0677; % [m] Bore dimension
-TDC = 0.003; % [m] Top dead center
-BDC = S + TDC; % [m] Bottom dead center
-V_d = (pi/4) * B^2 * S; % [m^3] Displacement volume
-V_c = V_d/(rc - 1); % [m^3] Clearance volume
-P_atm  = 1; % [Bar] Atmospheric pressure
-
+run("Model.m");
+run("Constants.m");
 %% Defining the kinematic equations of the engine as functions of theta
 
 Ca = linspace(0, 180, 181); % Intake stroke in degrees.
