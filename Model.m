@@ -25,6 +25,7 @@ V = zeros(1, NSteps);
 T = zeros(1, NSteps);
 dQcom = zeros(1, NSteps);
 dT = zeros(1, NSteps);
+m = zeros(1, NSteps);
 
 % System constant
 p0 = 1.01235e5 ;        % Ambient Pressure (pa)
@@ -128,7 +129,7 @@ T(1) = T0;
 pad(1) = p(1);
 Ca(1) = 0;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
-m(1) = p(1)*V(1)/Rg/T(1);
+m(1) = p(1)*V(1)/Rg_before_comb/T(1);
 
 %% Poisson relations
 
@@ -154,13 +155,14 @@ m(1) = p(1)*V(1)/Rg/T(1);
 for i=2:NSteps                          % Calculate values for 1 cycle
     Ca(i)=Ca(i-1)+dCa;
     V(i)=Vcyl(Ca(i),S,B,l,rc);          % New volume for current crank-angle
-    m(i)=m(i-1);                        % Mass is constant, valves are closed
     dV=V(i)-V(i-1);                     % Volume change
 
     % Intake
     if Ca(i) >= 0 && Ca(i) < 180
         p(i) = p0;
         T(i) = T0;
+        m(i) = p(i)*V(i)/Rg_before_comb/T(i);
+
     end
     for n=1:5
             Cvi(n) = CvNasa(T(360),SpSGasoline(n));
@@ -180,7 +182,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         C1 = p(360)*V(360)^gamma_comp_in;
         C2 = T(360)*V(360)^(gamma_comp_in-1);
 
-        
+        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
         p(i) = C1/V(i)^(gamma_comp_in);         % Poisson relations
         T(i) = C2/V(i)^(gamma_comp_in - 1);       % Poisson relations
     end
@@ -191,10 +193,11 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));           % Get Cv from Nasa-table
         end
         Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);
+        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
         dQcom(i) = 730;                         % Heat Release by combustion
         dT(i)=(dQcom(i)-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
-        p(i)=m(i)*Rg*T(i)/V(i);                 % Gaslaw
+        p(i)=m(i)*Rg_before_comb*T(i)/V(i);                 % Gaslaw
 
         
         % for n=1:NSp
@@ -220,6 +223,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
 
     % Power stroke
     if Ca(i) > 360 && Ca(i) < 540
+        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
         C3 = p(721)*V(721)^gamma_comb_out;
         C4 = T(721)*V(721)^(gamma_comb_out-1);
         p(i) = C3/V(i)^(gamma_comb_out);         % Poisson relations
@@ -232,7 +236,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     % Heat release
     if Ca(i) == 540      
 
-        m(i) = m(i-1);     
+        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));     
 
         p(i) = p0;         
         T(i) = T0;  
@@ -243,6 +247,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     if Ca(i) >= 540 && Ca(i) <= 720
         p(i) = p0;
         T(i) = T0;
+        m(i) = p(i)*V(i)/Rg_after_comb/T(i);
     end
     
 end
