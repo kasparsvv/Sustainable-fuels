@@ -59,7 +59,7 @@ Y_comb_out = (X_comb_out.*MiGasoline)/(M_total_after_comb);
 
 %% Calculation Rg E5
 % C7.76H13.1 + 11.035 O2 + 41.5 N2 --> 7.76 CO2 + 6.55 H2O + 41.5 N2
-% 2 C8H18 + 25 O2 → 16 CO2 + 18 H2O
+%C2H5OH + 3 O2 → 2 CO2 + 3 H2O
 N_Gasoline_E5 = MolesGasolineE5;
 N_Oxygen_E5 = MolesOxygenE5Gasoline + MolesOxygenE5Ethanol;
 N_Nitrogen_E5_before_comb = MolesNitrogenE5Gasoline + MolesNitrogenE5Ethanol;
@@ -78,8 +78,8 @@ X_E5_comp_in = [N_frac_E5Gasoline N_frac_E5Ethanol N_frac_E5Oxygen 0 0 N_frac_E5
 Y_E5_comp_in = (X_E5_comp_in.*MiE5)/(M_E5_total);
 
 %% Calculation Yi for E5 after combustion
-N_CO2_E5 = 7.76*N_Gasoline_E5 + 8*N_Ethanol_E5;
-N_H20_E5 = 6.55*N_Gasoline_E5 + 9*N_Ethanol_E5;
+N_CO2_E5 = 7.76*N_Gasoline_E5 + 2*N_Ethanol_E5;
+N_H20_E5 = 6.55*N_Gasoline_E5 + 3*N_Ethanol_E5;
 N_Nitrogen_E5_after_comb = N_Nitrogen_E5_before_comb;
 N_total_E5_after_comb = N_CO2_E5 + N_H20_E5 + N_Nitrogen_E5_after_comb;
 m_total_E5_after_comb = N_CO2_E5*MiE5(4) + N_H20_E5*MiE5(5) + N_Nitrogen_E5_after_comb*MiE5(6);
@@ -112,8 +112,8 @@ X_E10_comp_in = [N_frac_E10Gasoline N_frac_E10Ethanol N_frac_E10Oxygen 0 0 N_fra
 Y_E10_comp_in = (X_E10_comp_in.*MiE5)/(M_E10_total);
 
 %% Calculation Yi for E10 after combustion
-N_CO2_E10 = 7.76*N_Gasoline_E10 + 8*N_Ethanol_E10;
-N_H20_E10 = 6.55*N_Gasoline_E10 + 9*N_Ethanol_E10;
+N_CO2_E10 = 7.76*N_Gasoline_E10 + 2*N_Ethanol_E10;
+N_H20_E10 = 6.55*N_Gasoline_E10 + 3*N_Ethanol_E10;
 N_Nitrogen_E10_after_comb = N_Nitrogen_E10_before_comb;
 N_total_E10_after_comb = N_CO2_E10 + N_H20_E10 + N_Nitrogen_E10_after_comb;
 m_total_E10_after_comb = N_CO2_E10*MiE5(4) + N_H20_E10*MiE5(5) + N_Nitrogen_E10_after_comb*MiE5(6);
