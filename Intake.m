@@ -1,6 +1,6 @@
 run ("Model.m");
 run ("Constants.m");
-
+run ("LHV.m");
 %% Defining the kinematic equations of the engine as functions of theta
 
 Ca = linspace(0, 180, 181); % Intake stroke in degrees.
