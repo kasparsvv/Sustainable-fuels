@@ -1,6 +1,6 @@
 function [Q] = QModel(Ca)
 %Qmodel(Ca):: computes heat release by combustion
-% 
+a = 5;  
 %   Input: Ca, crank angle
 global Runiv
 if (isempty(Runiv))

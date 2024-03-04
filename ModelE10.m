@@ -129,7 +129,7 @@ T(1) = T0;
 pad(1) = p(1);
 Ca(1) = 0;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
-m(1) = p(1)*V(1)/Rg_before_comb/T(1);
+m(1) = p(1)*V(1)/Rg_E10_before_comb/T(1);
 
 %% Poisson relations
 
@@ -161,18 +161,18 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     if Ca(i) >= 0 && Ca(i) < 180
         p(i) = p0;
         T(i) = T0;
-        m(i) = p(i)*V(i)/Rg_before_comb/T(i);
+        m(i) = p(i)*V(i)/Rg_E10_before_comb/T(i);
 
     end
-    for n=1:5
-            Cvi(n) = CvNasa(T(360),SpSGasoline(n));
-            Cpi(n) = CpNasa(T(360),SpSGasoline(n));
+    for n=1:6
+            Cvi(n) = CvNasa(T(360),SpSE5(n));
+            Cpi(n) = CpNasa(T(360),SpSE5(n));
     end
     %Cv_comp_in = Y_comp_in.*Cvi'
     %Cp_comp_in = Y_comp_in.*Cpi'
 
-    Cv_comp_in = dot(Y_comp_in,Cvi);
-    Cp_comp_in = dot(Y_comp_in,Cpi);
+    Cv_comp_in = dot(Y_E10_comp_in,Cvi);
+    Cp_comp_in = dot(Y_E10_comp_in,Cpi);
 
     gamma_comp_in = Cp_comp_in/Cv_comp_in;
 
@@ -182,22 +182,22 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         C1 = p(360)*V(360)^gamma_comp_in;
         C2 = T(360)*V(360)^(gamma_comp_in-1);
 
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
+        m(i) = p(1)*V(361)/(Rg_E10_before_comb*T(1));
         p(i) = C1/V(i)^(gamma_comp_in);         % Poisson relations
         T(i) = C2/V(i)^(gamma_comp_in - 1);       % Poisson relations
     end
 
     % Ignition
     if Ca(i) == 360
-        for n=1:5
-        Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));           % Get Cv from Nasa-table
+        for n=1:6
+        Cvi_comb_in(n) =CvNasa(T(720),SpSE5(n));           % Get Cv from Nasa-table
         end
-        Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
+        Cv_comb_in = dot(Y_E10_comp_in,Cvi_comb_in);
+        m(i) = p(1)*V(361)/(Rg_E10_before_comb*T(1));
         dQcom(i) = 730;                         % Heat Release by combustion
         dT(i)=(dQcom(i)-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
-        p(i)=m(i)*Rg_before_comb*T(i)/V(i);                 % Gaslaw
+        p(i)=m(i)*Rg_E10_before_comb*T(i)/V(i);                 % Gaslaw
 
         
         % for n=1:NSp
@@ -209,34 +209,34 @@ for i=2:NSteps                          % Calculate values for 1 cycle
 
         
     end
-    for n=1:5
-    Cvi_comb_out(n) = CvNasa(T(721),SpSGasoline(n));
-    Cpi_comb_out(n) = CpNasa(T(721),SpSGasoline(n));
+    for n=1:6
+    Cvi_comb_out(n) = CvNasa(T(721),SpSE5(n));
+    Cpi_comb_out(n) = CpNasa(T(721),SpSE5(n));
     end
     %Cv_comp_in = Y_comp_in.*Cvi'
     %Cp_comp_in = Y_comp_in.*Cpi'
 
-    Cv_comb_out = dot(Y_comb_out,Cvi_comb_out);
-    Cp_comb_out = dot(Y_comb_out,Cpi_comb_out);
+    Cv_comb_out = dot(Y_E10_comb_out,Cvi_comb_out);
+    Cp_comb_out = dot(Y_E10_comb_out,Cpi_comb_out);
 
     gamma_comb_out = Cp_comb_out/Cv_comb_out;
 
     % Power stroke
     if Ca(i) > 360 && Ca(i) < 540
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
+        m(i) = p(1)*V(361)/(Rg_E10_before_comb*T(1));
         C3 = p(721)*V(721)^gamma_comb_out;
         C4 = T(721)*V(721)^(gamma_comb_out-1);
         p(i) = C3/V(i)^(gamma_comb_out);         % Poisson relations
         T(i) = C4/V(i)^(gamma_comb_out-1);       % Poisson relations
     end
-    for n=1:5
-        Cvi_ps_out(n) =CvNasa(T(1080),SpSGasoline(n));           % Get Cv from Nasa-table
+    for n=1:6
+        Cvi_ps_out(n) =CvNasa(T(1080),SpSE5(n));           % Get Cv from Nasa-table
     end
-    Cv_ps_out = dot(Y_comb_out,Cvi_ps_out);
+    Cv_ps_out = dot(Y_E10_comb_out,Cvi_ps_out);
     % Heat release
     if Ca(i) == 540      
 
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));     
+        m(i) = p(1)*V(361)/(Rg_E10_before_comb*T(1));     
 
         p(i) = p0;         
         T(i) = T0;  
@@ -247,20 +247,12 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     if Ca(i) >= 540 && Ca(i) <= 720
         p(i) = p0;
         T(i) = T0;
-        m(i) = p(i)*V(i)/Rg_after_comb/T(i);
+        m(i) = p(i)*V(i)/Rg_E10_after_comb/T(i);
     end
     
 end
 
 %% Plot pV-diagram
-
-figure;
-plot(Ca, V);
-xlabel('Crank angle');
-ylabel('Volume (m^3)');
-title('Crank angle VC Volume');
-grid on;
-
 
 figure;
 plot(V, p);
