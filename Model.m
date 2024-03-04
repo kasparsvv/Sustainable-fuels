@@ -47,6 +47,8 @@ V_c = pi/4 * B^2 * TDC; % [m63] Compression volume (will change)
 P_atm  = 1;             % [Bar] Atmospheric pressure (assumed for now)
 Ca(1) = 0;              % Initial crank angle
 
+S_p = 2 * 3000/60 * S;
+
 %% Fuel computations
 
 Evalue = 10;          % E-number of the fuel
@@ -130,7 +132,9 @@ pad(1) = p(1);
 Ca(1) = 0;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
 m(1) = p(1)*V(1)/Rg_before_comb/T(1);
-
+P_ref = 1.859606618881350e+06;
+V_ref = 2.640285571312627e-05;
+T_ref = 6.333244594935253e+02;
 %% Poisson relations
 
 % for n=1:NSp
@@ -151,6 +155,33 @@ m(1) = p(1)*V(1)/Rg_before_comb/T(1);
 %C2 = T(1)*V(1)^(gamma-1);   % Poisson relations
 
 %% Loop over the crank angles using a For-loop
+
+
+for i = 1:NSteps
+    Ca_i = (i - 1) * dCa;  % Current crank angle
+    
+    % Intake stroke
+    if Ca_i >= 0 && Ca_i < 180
+        B1(i) = 6.18;
+        B2(i) = 0;
+        
+    % Compression stroke
+    elseif Ca_i >= 180 && Ca_i < 360
+        B1(i) = 2.28;
+        B2(i) = 0;
+        
+    % Power stroke / Combustion / Expansion
+    elseif Ca_i >= 360 && Ca_i < 540
+        B1(i) = 2.28;
+        B2(i) = 3.24 * 10^-3;
+        
+    % Exhaust stroke
+    elseif Ca_i >= 540 && Ca_i <= 720
+        B1(i) = 6.18;
+        B2(i) = 0;
+    end
+end
+
 
 for i=2:NSteps                          % Calculate values for 1 cycle
     Ca(i)=Ca(i-1)+dCa;
@@ -249,7 +280,15 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         T(i) = T0;
         m(i) = p(i)*V(i)/Rg_after_comb/T(i);
     end
-    
+
+    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out);
+
+    w(i) = B1(i)*S_p + B2(i)*((max(V)*T_ref)/(P_ref*V_ref)) * (p(i) - p_motor2(i));
+
+    h_woschni(i) = 3.26 * B^(-0.2) * p(i)^(0.8) * T(i)^(-0.55) * w(i)^0.8;
+    h_hohenberg(i) = 140 * V(i)^(-0.06) * p(i)^(0.8) * T(i)^(-0.4) * (S_p + 1.4)^(0.8);
+    h_eichelberg(i) = 7.799 * 10^(-3) * S_p^(1/3) * p(i)^(0.5) * T(i)^(0.5);
+
 end
 
 %% Plot pV-diagram
@@ -275,6 +314,19 @@ ylabel('Temperature(K)');
 title('Crank angle over Temperature');
 grid on;
 
+figure;
+plot(Ca, h_woschni);
+xlabel('Crank angle (Ca)');
+ylabel('transfer coefficient h');
+title('Convective heat coefficient vs crank angle (WOSCHNI)');
+grid on;
+
+figure;
+plot(Ca, h_hohenberg);
+xlabel('Crank angle (Ca)');
+ylabel('transfer coefficient h');
+title('Convective heat coefficient vs crank angle (hohenberg)');
+grid on;
 
 %% Function of V_cyl
 function V_cyl = Vcyl(Ca, S, B, l, rc)
