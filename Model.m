@@ -268,6 +268,12 @@ ylabel('Pressure (Pa)');
 title('pV-diagram for the Otto cycle (Log-Log scale)'); 
 grid on;
 
+figure;
+plot(Ca, T);
+xlabel('Crank angle (Ca)');
+ylabel('Temperature(K)');
+title('Crank angle over Temperature');
+grid on;
 
 %% Function of V_cyl
 function V_cyl = Vcyl(Ca, S, B, l, rc)
