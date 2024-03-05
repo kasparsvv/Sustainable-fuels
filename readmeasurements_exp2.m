@@ -2,7 +2,7 @@ clear all;close all;clc
 %% add general to matlab path 
 addpath('General');
 %%
-DataDir='Data';ColumnOrder={'time','Sensor','Encoder'};
+DataDir='FULL';ColumnOrder={'time','Sensor','Encoder'};
 % DataDir='../Data/Gasoline';cOrder={'time'','Encoder','Sensor};
 col = lines(3);
 %% Measurements
