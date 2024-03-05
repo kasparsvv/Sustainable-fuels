@@ -1,4 +1,5 @@
 clear all;
+close all;
 %% Load the NASA tables
 
 relativepath_to_generalfolder='General'; % relative reference to General folder (assumes the folder is in you working folder)
@@ -103,6 +104,8 @@ P_ref = 1.859606618881350e+06; % [Pa] Reference pressure taken at crangle angle 
 V_ref = 2.640285571312627e-05; % [Pa] Reference volume  taken at crangle angle of 360
 T_ref = 6.333244594935253e+02; % [Pa] Reference temperature taken at crangle angle of 360
 
+T_ref_QLHV = 20+273.15;
+
 %% Poisson relations
 
 % for n=1:NSp
@@ -182,19 +185,20 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         C2 = T(360)*V(360)^(gamma_comp_in-1);
 
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
-        p(i) = C1/V(i)^(gamma_comp_in);         % Poisson relations
-        T(i) = C2/V(i)^(gamma_comp_in - 1);       % Poisson relations
+        p(i) = C1/(V(i)^(gamma_comp_in));         % Poisson relations
+        T(i) = C2/(V(i)^(gamma_comp_in - 1));       % Poisson relations
     end
-
     % Ignition
     if Ca(i) == 360
         for n=1:5
         Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));           % Get Cv from Nasa-table
         end
         Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);
+        Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
-        dQcom(i) = 730;                         % Heat Release by combustion
-        dT(i)=(dQcom(i)-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
+        m_fuel = m(365)/(1+AirFuelRatioGasoline);
+        dQcom = m_fuel*Q_LHV_E0;                         % Heat Release by combustion
+        dT(i)=(dQcom-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
         p(i)=m(i)*Rg_before_comb*T(i)/V(i);                 % Gaslaw
 
@@ -315,4 +319,15 @@ function V_cyl = Vcyl(Ca, S, B, l, rc)
 
     V_cyl = pi * (B/2)^2 * d + V_c; % [m^3] Free cylinder volume as a function of theta
     
+end
+function [Q_LHV] = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline)
+MoleH2O = 6.55;
+MoleCO2 = 7.76;
+MoleO2 = 11.035;
+MoleN2 = 41.5;
+MassH2O = (MoleH2O*0.0180)/(MiGasoline(1));
+MassCO2 = (MoleCO2*0.0440)/(MiGasoline(1));
+MassO2 = (MoleO2*0.0320)/(MiGasoline(1));
+MassN2 = (MoleN2*0.0280)/(MiGasoline(1));
+Q_LHV = -MassN2*HNasa(T_ref_QLHV,SpSGasoline(5))-MassCO2*HNasa(T_ref_QLHV,SpSGasoline(3)) - MassH2O*HNasa(T_ref_QLHV,SpSGasoline(4)) + MassO2*HNasa(T_ref_QLHV,SpSGasoline(2)) + HNasa(T_ref_QLHV,SpSGasoline(1));
 end
