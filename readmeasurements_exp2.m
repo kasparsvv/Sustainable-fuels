@@ -1,8 +1,8 @@
 clear all;close all;clc
 %% add general to matlab path 
-addpath('C:\Users\20221847\OneDrive - TU Eindhoven\Desktop\matlab');
+addpath('General');
 %%
-DataDir='C:\Users\20221847\OneDrive - TU Eindhoven\Desktop\matlab\Data\Training Set\FULL';ColumnOrder={'time','Sensor','Encoder'};
+DataDir='Data';ColumnOrder={'time','Sensor','Encoder'};
 % DataDir='../Data/Gasoline';cOrder={'time'','Encoder','Sensor};
 col = lines(3);
 %% Measurements
