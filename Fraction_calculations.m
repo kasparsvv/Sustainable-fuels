@@ -25,7 +25,7 @@ cFuelEthanol = 'C2H5OH';
 iSpE5 = myfind({Sp.Name},{cFuelGasoline,cFuelEthanol,'O2','CO2','H2O','N2'});
 SpSE5=Sp(iSpE5);                                                              % Subselection of the database in the order according to {'Gasoline','O2','CO2','H2O','N2'}
 NSpE5 = length(SpSE5);
-MiE5 = [SpSE5.Mass];        %Also used for other gasoline/ethanol mixtures
+MiE5 = [SpSE5.Mass];
 %% Calculation Rg pure gasoline
 % C7.76H13.1 + 11.035 O2 + 41.5 N2 --> 7.76 CO2 + 6.55 H2O + 41.5 N2
 N_fuel = 1;
@@ -127,7 +127,7 @@ Y_E10_comb_out = (X_E10_comb_out.*MiE5)/(M_total_E10_after_comb);
 
 %% Calculation Rg E15
 % C7.76H13.1 + 11.035 O2 + 41.5 N2 --> 7.76 CO2 + 6.55 H2O + 41.5 N2
-%C2H5OH + 3 O2 → 2 CO2 + 3 H2O
+% 2 C8H18 + 25 O2 → 16 CO2 + 18 H2O
 N_Gasoline_E15 = MolesGasolineE15;
 N_Oxygen_E15 = MolesOxygenE15Gasoline + MolesOxygenE15Ethanol;
 N_Nitrogen_E15_before_comb = MolesNitrogenE15Gasoline + MolesNitrogenE15Ethanol;
