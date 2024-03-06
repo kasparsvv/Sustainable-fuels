@@ -25,7 +25,7 @@ cFuelEthanol = 'C2H5OH';
 iSpE5 = myfind({Sp.Name},{cFuelGasoline,cFuelEthanol,'O2','CO2','H2O','N2'});
 SpSE5=Sp(iSpE5);                                                              % Subselection of the database in the order according to {'Gasoline','O2','CO2','H2O','N2'}
 NSpE5 = length(SpSE5);
-MiE5 = [SpSE5.Mass];
+MiE5 = [SpSE5.Mass];        %Also used for other gasoline/ethanol mixtures
 %% Calculation Rg pure gasoline
 % C7.76H13.1 + 11.035 O2 + 41.5 N2 --> 7.76 CO2 + 6.55 H2O + 41.5 N2
 N_fuel = 1;
@@ -124,3 +124,37 @@ N_frac_E10_H20 = N_H20_E10/N_total_E10_after_comb;
 N_frac_E10_N2_after_comb = N_Nitrogen_E10_after_comb/N_total_E10_after_comb;
 X_E10_comb_out = [0 0 0 N_frac_E10_CO2 N_frac_E10_H20 N_frac_E10_N2_after_comb];
 Y_E10_comb_out = (X_E10_comb_out.*MiE5)/(M_total_E10_after_comb);
+
+%% Calculation Rg E15
+% C7.76H13.1 + 11.035 O2 + 41.5 N2 --> 7.76 CO2 + 6.55 H2O + 41.5 N2
+%C2H5OH + 3 O2 → 2 CO2 + 3 H2O
+N_Gasoline_E15 = MolesGasolineE15;
+N_Oxygen_E15 = MolesOxygenE15Gasoline + MolesOxygenE15Ethanol;
+N_Nitrogen_E15_before_comb = MolesNitrogenE15Gasoline + MolesNitrogenE15Ethanol;
+N_Ethanol_E15 = MolesEthanolE15;
+N_E15_total_before_comb = N_Gasoline_E15 + N_Oxygen_E15 + N_Nitrogen_E15_before_comb + N_Ethanol_E15;
+m_E15_total_before_comb = N_Gasoline_E15*MiE5(1) + N_Oxygen_E15*MiE5(3) + N_Nitrogen_E15_before_comb*MiE5(6) + N_Ethanol_E15*MiE5(2);
+M_E15_total = m_E15_total_before_comb/N_E15_total_before_comb;
+Rg_E15_before_comb = Runiv/M_E15_total;
+
+%% Calculation Yi for E15 before combustion
+N_frac_E15Gasoline = N_Gasoline_E15/N_E15_total_before_comb;
+N_frac_E15Oxygen = N_Oxygen_E15/N_E15_total_before_comb;
+N_frac_E15Nitrogen = N_Nitrogen_E15_before_comb/N_E15_total_before_comb;
+N_frac_E15Ethanol = N_Ethanol_E15/N_E15_total_before_comb;
+X_E15_comp_in = [N_frac_E15Gasoline N_frac_E15Ethanol N_frac_E15Oxygen 0 0 N_frac_E15Nitrogen];
+Y_E15_comp_in = (X_E15_comp_in.*MiE5)/(M_E15_total);
+
+%% Calculation Yi for E15 after combustion
+N_CO2_E15 = 7.76*N_Gasoline_E15 + 2*N_Ethanol_E15;
+N_H20_E15 = 6.55*N_Gasoline_E15 + 3*N_Ethanol_E15;
+N_Nitrogen_E15_after_comb = N_Nitrogen_E15_before_comb;
+N_total_E15_after_comb = N_CO2_E15 + N_H20_E15 + N_Nitrogen_E15_after_comb;
+m_total_E15_after_comb = N_CO2_E15*MiE5(4) + N_H20_E15*MiE5(5) + N_Nitrogen_E15_after_comb*MiE5(6);
+M_total_E15_after_comb = m_total_E15_after_comb/N_total_E15_after_comb;
+Rg_E15_after_comb = Runiv/M_total_E15_after_comb;
+N_frac_E15_CO2 = N_CO2_E15/N_total_E15_after_comb;
+N_frac_E15_H20 = N_H20_E15/N_total_E15_after_comb;
+N_frac_E15_N2_after_comb = N_Nitrogen_E15_after_comb/N_total_E15_after_comb;
+X_E15_comb_out = [0 0 0 N_frac_E15_CO2 N_frac_E15_H20 N_frac_E15_N2_after_comb];
+Y_E15_comb_out = (X_E15_comb_out.*MiE5)/(M_total_E15_after_comb);

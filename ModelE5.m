@@ -258,14 +258,14 @@ figure;
 plot(V, p);
 xlabel('Volume (m^3)');
 ylabel('Pressure (Pa)');
-title('pV-diagram for the Otto cycle');
+title('pV-diagram for the Otto cycle E5');
 grid on;
 
 figure;
 loglog(V, p);
 xlabel('Volume (m^3)');
 ylabel('Pressure (Pa)');
-title('pV-diagram for the Otto cycle (Log-Log scale)'); 
+title('pV-diagram for the Otto cycle E5 (Log-Log scale)'); 
 grid on;
 
 

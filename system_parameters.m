@@ -38,6 +38,10 @@ m = zeros(1, NSteps);
 
 %% Reference state (360 degrees)
 
-P_ref = 1.859606618881350e+06;          % [Pa] Reference pressure taken at crangle angle of 360
-V_ref = 2.640285571312627e-05;          % [Pa] Reference volume  taken at crangle angle of 360
-T_ref = 6.333244594935253e+02;          % [Pa] Reference temperature taken at crangle angle of 360
+P_ref = 1.859606618881350e+06; % [Pa] Reference pressure taken at crangle angle of 360
+V_ref = 2.640285571312627e-05; % [Pa] Reference volume  taken at crangle angle of 360
+T_ref = 6.333244594935253e+02; % [Pa] Reference temperature taken at crangle angle of 360
+
+
+%% Reference temperature for LHV
+T_ref_QLHV = 20+273.15;
