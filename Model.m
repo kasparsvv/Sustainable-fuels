@@ -100,12 +100,6 @@ Ca(1) = 0;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
 m(1) = p(1)*V(1)/Rg_before_comb/T(1);
 
-P_ref = 1.859606618881350e+06; % [Pa] Reference pressure taken at crangle angle of 360
-V_ref = 2.640285571312627e-05; % [Pa] Reference volume  taken at crangle angle of 360
-T_ref = 6.333244594935253e+02; % [Pa] Reference temperature taken at crangle angle of 360
-
-T_ref_QLHV = 20+273.15;
-
 %% Poisson relations
 
 % for n=1:NSp
@@ -253,19 +247,20 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         m(i) = p(i)*V(i)/Rg_after_comb/T(i);
     end
 
+    % Heat loss
 
-    % A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2)));
-    % Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330);
+    A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
 
-    % p_motor1(i) = (((rc *  max(V)/(rc - 1))^gamma_comb_out * P_atm)/V(i)^gamma_comb_out); % [Pa] motorized cylinder pressure
-
-    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out);
+    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out); % [Pa] Motorized cylinder pressure
 
     w(i) = B1(i)*S_p + B2(i)*((max(V)*T_ref)/(P_ref*V_ref)) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
 
     h_woschni(i) = 3.26 * B^(-0.2) * p(i)^(0.8) * T(i)^(-0.55) * w(i)^0.8; % [W/(m^2*K)]
-    h_hohenberg(i) = 140 * V(i)^(-0.06) * p(i)^(0.8) * T(i)^(-0.4) * (S_p + 1.4)^(0.8);
-    h_eichelberg(i) = 7.799 * 10^(-3) * S_p^(1/3) * p(i)^(0.5) * T(i)^(0.5);
+
+    Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
+
+    % h_hohenberg(i) = 140 * V(i)^(-0.06) * p(i)^(0.8) * T(i)^(-0.4) * (S_p + 1.4)^(0.8);
+    % h_eichelberg(i) = 7.799 * 10^(-3) * S_p^(1/3) * p(i)^(0.5) * T(i)^(0.5);
 
 end
 
@@ -320,14 +315,18 @@ function V_cyl = Vcyl(Ca, S, B, l, rc)
     V_cyl = pi * (B/2)^2 * d + V_c; % [m^3] Free cylinder volume as a function of theta
     
 end
+
+%% Function of low heating value
 function [Q_LHV] = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline)
-MoleH2O = 6.55;
-MoleCO2 = 7.76;
-MoleO2 = 11.035;
-MoleN2 = 41.5;
-MassH2O = (MoleH2O*0.0180)/(MiGasoline(1));
-MassCO2 = (MoleCO2*0.0440)/(MiGasoline(1));
-MassO2 = (MoleO2*0.0320)/(MiGasoline(1));
-MassN2 = (MoleN2*0.0280)/(MiGasoline(1));
+
+    MoleH2O = 6.55;
+    MoleCO2 = 7.76;
+    MoleO2 = 11.035;
+    MoleN2 = 41.5;
+    MassH2O = (MoleH2O*0.0180)/(MiGasoline(1));
+    MassCO2 = (MoleCO2*0.0440)/(MiGasoline(1));
+    MassO2 = (MoleO2*0.0320)/(MiGasoline(1));
+    MassN2 = (MoleN2*0.0280)/(MiGasoline(1));
+
 Q_LHV = -MassN2*HNasa(T_ref_QLHV,SpSGasoline(5))-MassCO2*HNasa(T_ref_QLHV,SpSGasoline(3)) - MassH2O*HNasa(T_ref_QLHV,SpSGasoline(4)) + MassO2*HNasa(T_ref_QLHV,SpSGasoline(2)) + HNasa(T_ref_QLHV,SpSGasoline(1));
 end
