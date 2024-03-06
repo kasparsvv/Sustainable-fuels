@@ -40,7 +40,7 @@ for k=1:nFiles
     %position_max_pressure = position_max_pressurei(1);
     
     %Doubletooth = deg2rad(16) - (position_max_pressure-1)*(2*pi/((pos2 - pos1+1)/2));  
-    Doubletooth=deg2rad(-223); %put in double tooth angle
+    Doubletooth=deg2rad(-256); %put in double tooth angle
     pos1 = RevEnd(1);                                                   
     pos2 = RevEnd(3); %a complete cycle includes 2 revolutions
 
