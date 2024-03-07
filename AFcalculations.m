@@ -1,3 +1,5 @@
+clear all;
+close all;
 relativepath_to_generalfolder='General'; % relative reference to General folder (assumes the folder is in you working folder)
 addpath(relativepath_to_generalfolder); 
 % Load Nasadatabase
@@ -63,6 +65,8 @@ MolesNitrogenE5Gasoline = (MolesOxygenE5Gasoline*0.79)/0.21; %% Amount of moles 
 % for combustion gasoline in E5
 MassOxygenE5Gasoline = MolesOxygenE5Gasoline*MiGasoline(2); % The mass of this oxygen
 MassNitrogenE5Gasoline = MolesNitrogenE5Gasoline*MiGasoline(5); % The mass of this nitrogen
+MassH20E5Gasoline = MolesGasolineE5*6.55*MiGasoline(4);
+MassCO2E5Gasoline = MolesGasolineE5*7.76*MiGasoline(3);
 
 TotalMassAirE5Gasoline = MassOxygenE5Gasoline + MassNitrogenE5Gasoline;
 
@@ -74,6 +78,8 @@ MolesNitrogenE5Ethanol = (MolesOxygenE5Ethanol*0.79)/0.21; %% Amount of moles Ni
 % for combustion ethanol in E5
 MassOxygenE5Ethanol = MolesOxygenE5Ethanol*MiEthanol(2);
 MassNitrogenE5Ethanol = MolesNitrogenE5Ethanol*MiEthanol(5);
+MassH20E5Ethanol = MolesEthanolE5*3*MiEthanol(4);
+MassCO2E5Ethanol = MolesEthanolE5*2*MiEthanol(3);
 
 TotalMassAirE5Ethanol = MassOxygenE5Ethanol + MassNitrogenE5Ethanol;
 
@@ -99,6 +105,8 @@ MolesNitrogenE10Gasoline = (MolesOxygenE10Gasoline*0.79)/0.21; %% Amount of mole
 % for combustion gasoline in E10
 MassOxygenE10Gasoline = MolesOxygenE10Gasoline*MiGasoline(2); % The mass of this oxygen
 MassNitrogenE10Gasoline = MolesNitrogenE10Gasoline*MiGasoline(5); % The mass of this nitrogen
+MassH20E10Gasoline = MolesGasolineE10*6.55*MiGasoline(4);
+MassCO2E10Gasoline = MolesGasolineE10*7.76*MiGasoline(3);
 
 TotalMassAirE10Gasoline = MassOxygenE10Gasoline + MassNitrogenE10Gasoline;
 
@@ -110,6 +118,8 @@ MolesNitrogenE10Ethanol = (MolesOxygenE10Ethanol*0.79)/0.21; %% Amount of moles 
 % for combustion ethanol in E10
 MassOxygenE10Ethanol = MolesOxygenE10Ethanol*MiEthanol(2);
 MassNitrogenE10Ethanol = MolesNitrogenE10Ethanol*MiEthanol(5);
+MassH20E10Ethanol = MolesEthanolE10*3*MiEthanol(4);
+MassCO2E10Ethanol = MolesEthanolE10*2*MiEthanol(3);
 
 TotalMassAirE10Ethanol = MassOxygenE10Ethanol + MassNitrogenE10Ethanol;
 
@@ -127,31 +137,35 @@ E15_value_Gasoline = 0.85; %volume percentage Gasoline
 MassGasolineE15 = 1/(1+(E15_value_Ethanol/E15_value_Gasoline)*(DensityEthanol/DensityGasoline));
 MassEthanolE15 = 1 - MassGasolineE15;
 
-%Mass air needed for combustion Gasoline in E15
-MolesGasolineE15 = MassGasolineE15/MGasoline; %Amount of moles Gasoline in 1kg E15
+%Mass air needed for combustion Gasoline in E10
+MolesGasolineE15 = MassGasolineE15/MGasoline; %Amount of moles Gasoline in 1kg E10
 MolesOxygenE15Gasoline = MolesGasolineE15*11.035; %% Amount of moles Oxygen needed ... 
-% for combustion gasoline in E15
+% for combustion gasoline in E10
 MolesNitrogenE15Gasoline = (MolesOxygenE15Gasoline*0.79)/0.21; %% Amount of moles Nitrogen needed ... 
-% for combustion gasoline in E15
+% for combustion gasoline in E10
 MassOxygenE15Gasoline = MolesOxygenE15Gasoline*MiGasoline(2); % The mass of this oxygen
 MassNitrogenE15Gasoline = MolesNitrogenE15Gasoline*MiGasoline(5); % The mass of this nitrogen
+MassH20E15Gasoline = MolesGasolineE15*6.55*MiGasoline(4);
+MassCO2E15Gasoline = MolesGasolineE15*7.76*MiGasoline(3);
 
 TotalMassAirE15Gasoline = MassOxygenE15Gasoline + MassNitrogenE15Gasoline;
 
-%Mass air needed for combustion Ethanol in E15
-MolesEthanolE15 = MassEthanolE15/MEthanol; %Amount of moles Ethanol in 1kg E15
+%Mass air needed for combustion Ethanol in E10
+MolesEthanolE15 = MassEthanolE15/MEthanol; %Amount of moles Ethanol in 1kg E10
 MolesOxygenE15Ethanol = MolesEthanolE15*3; %% Amount of moles Oxygen needed ... 
-% for combustion ethanol in E15
+% for combustion ethanol in E10
 MolesNitrogenE15Ethanol = (MolesOxygenE15Ethanol*0.79)/0.21; %% Amount of moles Nitrogen needed ... 
-% for combustion ethanol in E15
+% for combustion ethanol in E10
 MassOxygenE15Ethanol = MolesOxygenE15Ethanol*MiEthanol(2);
 MassNitrogenE15Ethanol = MolesNitrogenE15Ethanol*MiEthanol(5);
+MassH20E15Ethanol = MolesEthanolE15*3*MiEthanol(4);
+MassCO2E15Ethanol = MolesEthanolE15*2*MiEthanol(3);
 
 TotalMassAirE15Ethanol = MassOxygenE15Ethanol + MassNitrogenE15Ethanol;
 
-%Total mass air needed for combustion of 1kg E15
+%Total mass air needed for combustion of 1kg E10
 TotalMassAirE15 = TotalMassAirE15Gasoline + TotalMassAirE15Ethanol;
 
-%AF ratio for E15
+%AF ratio for E10
 AirFuelRatioE15 = TotalMassAirE15/1;
 save("AFcalculations.mát")

@@ -121,6 +121,8 @@ MassGasoline = DensityGasoline*VolumeGasoline;          % Gasoline = 749 kg/m^3
 
 %Rg = Runiv/MFuelAir;   %Specific gas constant
 %Rg = 290;
+%% Reference temperature for LHV
+T_ref_QLHV = 20+273.15;
 
 %% Initialisation
 
@@ -193,9 +195,11 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         Cvi_comb_in(n) =CvNasa(T(720),SpSE5(n));           % Get Cv from Nasa-table
         end
         Cv_comb_in = dot(Y_E5_comp_in,Cvi_comb_in);
+        Q_LHV_E5 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,SpSEthanol, MassH20E5Gasoline, MassH20E5Ethanol,MassCO2E5Gasoline,MassCO2E5Ethanol, MassOxygenE5Gasoline, MassOxygenE5Ethanol,MassNitrogenE5Gasoline,MassNitrogenE5Ethanol,MassGasolineE5, MassEthanolE5);
         m(i) = p(1)*V(361)/(Rg_E5_before_comb*T(1));
-        dQcom(i) = 730;                         % Heat Release by combustion
-        dT(i)=(dQcom(i)-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
+        m_fuel = m(365)/(1+AirFuelRatioE5);
+        dQcom = m_fuel*Q_LHV_E5;                         % Heat Release by combustion
+        dT(i)=(dQcom-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
         p(i)=m(i)*Rg_E5_before_comb*T(i)/V(i);                 % Gaslaw
 
@@ -252,6 +256,16 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     
 end
 
+%% Efficiency and Power Calculations
+RPM = 3000; % rounds per minute
+n_rpc = 2; %number of rounds per cycle
+
+W_E5= trapz(V,p);
+efficiency = W_E5/dQcom*100;
+gamma_average = (gamma_comb_out+gamma_comp_in) / 2;
+ottoefficiency =(1-(1/rc)^(gamma_average-1)) *100;
+P_E5 = W_E5 * (RPM/60) * (1/n_rpc);
+bsfc = m_fuel*1000/(W_E5/3600000);
 %% Plot pV-diagram
 
 figure;
@@ -282,4 +296,14 @@ function V_cyl = Vcyl(Ca, S, B, l, rc)
 
     V_cyl = pi * (B/2)^2 * d + V_c; % [m^3] Free cylinder volume as a function of theta
     
+end
+%% Function of low heating value
+function [Q_LHV] = LowerHeatingValue(T_ref_QLHV,SpSGasoline,SpSEthanol, MassH20E5Gasoline, MassH20E5Ethanol,MassCO2E5Gasoline,MassCO2E5Ethanol, MassOxygenE5Gasoline, MassOxygenE5Ethanol,MassNitrogenE5Gasoline,MassNitrogenE5Ethanol,MassGasolineE5, MassEthanolE5)
+
+    MassH2O = MassH20E5Gasoline + MassH20E5Ethanol;
+    MassCO2 = MassCO2E5Gasoline + MassCO2E5Ethanol;
+    MassO2 = MassOxygenE5Gasoline + MassOxygenE5Ethanol;
+    MassN2 = MassNitrogenE5Gasoline + MassNitrogenE5Ethanol;
+
+Q_LHV = -MassCO2*HNasa(T_ref_QLHV,SpSGasoline(3)) - MassH2O*HNasa(T_ref_QLHV,SpSGasoline(4)) + MassGasolineE5*HNasa(T_ref_QLHV,SpSGasoline(1)) + MassEthanolE5*HNasa(T_ref_QLHV,SpSEthanol(1));
 end

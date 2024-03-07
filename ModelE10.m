@@ -149,6 +149,8 @@ m(1) = p(1)*V(1)/Rg_E10_before_comb/T(1);
 %gamma = 1.4;
 %C1 = p(1)*V(1)^gamma;       % Poisson relations
 %C2 = T(1)*V(1)^(gamma-1);   % Poisson relations
+%% Reference temperature for LHV
+T_ref_QLHV = 20+273.15;
 
 %% Loop over the crank angles using a For-loop
 
@@ -193,9 +195,11 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         Cvi_comb_in(n) =CvNasa(T(720),SpSE5(n));           % Get Cv from Nasa-table
         end
         Cv_comb_in = dot(Y_E10_comp_in,Cvi_comb_in);
+        Q_LHV_E10 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,SpSEthanol, MassH20E10Gasoline, MassH20E10Ethanol,MassCO2E10Gasoline,MassCO2E10Ethanol,MassGasolineE10, MassEthanolE10);
         m(i) = p(1)*V(361)/(Rg_E10_before_comb*T(1));
-        dQcom(i) = 730;                         % Heat Release by combustion
-        dT(i)=(dQcom(i)-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
+        m_fuel = m(365)/(1+AirFuelRatioE10);
+        dQcom = m_fuel*Q_LHV_E10;                         % Heat Release by combustion
+        dT(i)=(dQcom-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
         p(i)=m(i)*Rg_E10_before_comb*T(i)/V(i);                 % Gaslaw
 
@@ -252,6 +256,16 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     
 end
 
+%% Efficiency and Power Calculations
+RPM = 3000; % rounds per minute
+n_rpc = 2; %number of rounds per cycle
+
+W_E10= trapz(V,p);
+efficiency = W_E10/dQcom*100;
+gamma_average = (gamma_comb_out+gamma_comp_in) / 2;
+ottoefficiency =(1-(1/rc)^(gamma_average-1)) *100;
+P_E10 = W_E10 * (RPM/60) * (1/n_rpc);
+bsfc = m_fuel*1000/(W_E10/3600000);
 %% Plot pV-diagram
 
 figure;
@@ -282,4 +296,13 @@ function V_cyl = Vcyl(Ca, S, B, l, rc)
 
     V_cyl = pi * (B/2)^2 * d + V_c; % [m^3] Free cylinder volume as a function of theta
     
+end
+%% Function of low heating value
+function [Q_LHV] = LowerHeatingValue(T_ref_QLHV,SpSGasoline,SpSEthanol, MassH20E10Gasoline, MassH20E10Ethanol,MassCO2E10Gasoline,MassCO2E10Ethanol,MassGasolineE10, MassEthanolE10)
+
+    MassH2O = MassH20E10Gasoline + MassH20E10Ethanol;
+    MassCO2 = MassCO2E10Gasoline + MassCO2E10Ethanol;
+
+
+Q_LHV = -MassCO2*HNasa(T_ref_QLHV,SpSGasoline(3)) - MassH2O*HNasa(T_ref_QLHV,SpSGasoline(4)) + MassGasolineE10*HNasa(T_ref_QLHV,SpSGasoline(1)) + MassEthanolE10*HNasa(T_ref_QLHV,SpSEthanol(1));
 end

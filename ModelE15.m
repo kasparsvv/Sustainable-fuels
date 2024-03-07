@@ -129,7 +129,7 @@ T(1) = T0;
 pad(1) = p(1);
 Ca(1) = 0;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
-m(1) = p(1)*V(1)/Rg_E15_before_comb/T(1);
+m(1) = p(1)*V(1)/Rg_E10_before_comb/T(1);
 
 %% Poisson relations
 
@@ -149,6 +149,8 @@ m(1) = p(1)*V(1)/Rg_E15_before_comb/T(1);
 %gamma = 1.4;
 %C1 = p(1)*V(1)^gamma;       % Poisson relations
 %C2 = T(1)*V(1)^(gamma-1);   % Poisson relations
+%% Reference temperature for LHV
+T_ref_QLHV = 20+273.15;
 
 %% Loop over the crank angles using a For-loop
 
@@ -193,9 +195,11 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         Cvi_comb_in(n) =CvNasa(T(720),SpSE5(n));           % Get Cv from Nasa-table
         end
         Cv_comb_in = dot(Y_E15_comp_in,Cvi_comb_in);
+        Q_LHV_E15 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,SpSEthanol, MassH20E15Gasoline, MassH20E15Ethanol,MassCO2E15Gasoline,MassCO2E15Ethanol,MassGasolineE15, MassEthanolE15);
         m(i) = p(1)*V(361)/(Rg_E15_before_comb*T(1));
-        dQcom(i) = 730;                         % Heat Release by combustion
-        dT(i)=(dQcom(i)-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
+        m_fuel = m(365)/(1+AirFuelRatioE15);
+        dQcom = m_fuel*Q_LHV_E15;                         % Heat Release by combustion
+        dT(i)=(dQcom-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
         p(i)=m(i)*Rg_E15_before_comb*T(i)/V(i);                 % Gaslaw
 
@@ -252,6 +256,16 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     
 end
 
+%% Efficiency and Power Calculations
+RPM = 3000; % rounds per minute
+n_rpc = 2; %number of rounds per cycle
+
+W_E15= trapz(V,p);
+efficiency = W_E15/dQcom*100;
+gamma_average = (gamma_comb_out+gamma_comp_in) / 2;
+ottoefficiency =(1-(1/rc)^(gamma_average-1)) *100;
+P_E15 = W_E15 * (RPM/60) * (1/n_rpc);
+bsfc = m_fuel*1000/(W_E15/3600000);
 %% Plot pV-diagram
 
 figure;
@@ -282,4 +296,13 @@ function V_cyl = Vcyl(Ca, S, B, l, rc)
 
     V_cyl = pi * (B/2)^2 * d + V_c; % [m^3] Free cylinder volume as a function of theta
     
+end
+%% Function of low heating value
+function [Q_LHV] = LowerHeatingValue(T_ref_QLHV,SpSGasoline,SpSEthanol, MassH20E15Gasoline, MassH20E15Ethanol,MassCO2E15Gasoline,MassCO2E15Ethanol,MassGasolineE15, MassEthanolE15)
+
+    MassH2O = MassH20E15Gasoline + MassH20E15Ethanol;
+    MassCO2 = MassCO2E15Gasoline + MassCO2E15Ethanol;
+
+
+Q_LHV = -MassCO2*HNasa(T_ref_QLHV,SpSGasoline(3)) - MassH2O*HNasa(T_ref_QLHV,SpSGasoline(4)) + MassGasolineE15*HNasa(T_ref_QLHV,SpSGasoline(1)) + MassEthanolE15*HNasa(T_ref_QLHV,SpSEthanol(1));
 end

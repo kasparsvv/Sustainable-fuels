@@ -2,7 +2,7 @@ clear all;close all;clc
 %% add general to matlab path 
 addpath('General');
 %%
-DataDir='';ColumnOrder={'time','Sensor','Encoder'}; %here the directory should be to a folder with all the engine turning off measurements
+DataDir='Group14/EngineOffFinal';ColumnOrder={'time','Encoder','Sensor'};
 % DataDir='../Data/Gasoline';cOrder={'time'','Encoder','Sensor};
 col = lines(3);
 %% Loading all measurments in DataDir
@@ -42,11 +42,11 @@ for i=1:nFiles
 end
 %% All measurements are loaded
 for i = 1:nFiles
-        pos1 = find(t==coordinateofdoubletooth1); %put in the coordinate of a double tooth
-        pos2 = find(t==coordinateofdoubletooth2);
-        V_cut = V(pos1:pos2);
-        p_cut = p(pos1:pos2);
-        t_cut = t(pos1:pos2);
+        pos1 = find(t==0.03718);
+        pos2 = find(t==0.07439);
+        V_cut = V(3718:7439);
+        p_cut = p(3718:7439);
+        t_cut = t(3718:7439);
 
 figure(3)
     subplot(2,1,1)
@@ -65,6 +65,6 @@ figure(3)
         Max_pressure = max(V_cut);
         position_max_pressurei = find(V_cut==Max_pressure);
         position_max_pressure = position_max_pressurei(1);
-        Doubletooth = deg2rad(0) - (position_max_pressure-1)*(2*pi/((pos2-pos1)/2));
+        Doubletooth = deg2rad(0) - (position_max_pressure-1)*(2*pi/((7439-3718)/2));
         Doubletooth = rad2deg(Doubletooth);
 end
