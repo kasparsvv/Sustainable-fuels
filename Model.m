@@ -9,7 +9,7 @@ TdataBase=fullfile('General','Nasa','NasaThermalDatabase');
 load(TdataBase);
 run("AFcalculations.m");
 run("Fraction_calculations.m");
-run("system_parameters.m")
+run("system_parameters.m");
 
 %% Constants
 
@@ -100,28 +100,6 @@ Ca(1) = 0;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
 m(1) = p(1)*V(1)/Rg_before_comb/T(1);
 
-%% Poisson relations
-
-% for n=1:NSp
-%     Cvi(n) =CvNasa(T(1),SpS(n));           % Get Cv from Nasa-table
-% end
-% Cv = Yi_before * Cvi'; 
-
-% for n=1:NSp
-%     Cpi(n) =CpNasa(T(1),SpS(n));           % Get Cp from Nasa-table
-% end
-% Cp = Yi_before * Cpi';
-
-% gamma = Cp/Cv;
-%Cv = 1000;
-
-%gamma = 1.4;
-%C1 = p(1)*V(1)^gamma;       % Poisson relations
-%C2 = T(1)*V(1)^(gamma-1);   % Poisson relations
-
-%% Loop over the crank angles using a For-loop
-
-
 for i = 1:NSteps
     Ca_i = (i - 1) * dCa;  % Current crank angle
     
@@ -147,7 +125,7 @@ for i = 1:NSteps
     end
 end
 
-
+%% Loop over the crank angles using a For-loop
 for i=2:NSteps                          % Calculate values for 1 cycle
     Ca(i)=Ca(i-1)+dCa;
     V(i)=Vcyl(Ca(i),S,B,l,rc);          % New volume for current crank-angle
@@ -164,9 +142,6 @@ for i=2:NSteps                          % Calculate values for 1 cycle
             Cvi(n) = CvNasa(T(360),SpSGasoline(n));
             Cpi(n) = CpNasa(T(360),SpSGasoline(n));
     end
-    %Cv_comp_in = Y_comp_in.*Cvi'
-    %Cp_comp_in = Y_comp_in.*Cpi'
-
     Cv_comp_in = dot(Y_comp_in,Cvi);
     Cp_comp_in = dot(Y_comp_in,Cpi);
 
@@ -179,57 +154,54 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         C2 = T(360)*V(360)^(gamma_comp_in-1);
 
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
-        p(i) = C1/(V(i)^(gamma_comp_in));         % Poisson relations
+        p(i) = C1/(V(i)^(gamma_comp_in));           % Poisson relations
         T(i) = C2/(V(i)^(gamma_comp_in - 1));       % Poisson relations
     end
+
     % Ignition
     if Ca(i) == 360
         for n=1:5
         Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));           % Get Cv from Nasa-table
         end
         Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);
-        Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
+        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));        
         m_fuel = m(365)/(1+AirFuelRatioGasoline);
-        dQcom = m_fuel*Q_LHV_E0;                         % Heat Release by combustion
-        dT(i)=(dQcom-p(i-1)*dV)/Cv_comb_in/m(i-1);   % 1st Law dU=dQ-pdV (closed system)
+
+        Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
+        dQcom = m_fuel*Q_LHV_E0;                                % Heat Release by combustion
+
+        dT(i)=(dQcom-p(i-1)*dV)/Cv_comb_in/m(i-1);              % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
-        p(i)=m(i)*Rg_before_comb*T(i)/V(i);                 % Gaslaw
 
-        
-        % for n=1:NSp
-        % Cpi(n) =CpNasa(T(i),SpS(n));           % Get Cp from Nasa-table
-        % end
-        % Cp = Yi_after * Cvi';
-
-        % gamma = Cp/Cv;
-
-        
+        p(i)=m(i)*Rg_before_comb*T(i)/V(i);                     % Gaslaw       
     end
+
     for n=1:5
     Cvi_comb_out(n) = CvNasa(T(721),SpSGasoline(n));
     Cpi_comb_out(n) = CpNasa(T(721),SpSGasoline(n));
     end
-    %Cv_comp_in = Y_comp_in.*Cvi'
-    %Cp_comp_in = Y_comp_in.*Cpi'
-
     Cv_comb_out = dot(Y_comb_out,Cvi_comb_out);
     Cp_comb_out = dot(Y_comb_out,Cpi_comb_out);
 
     gamma_comb_out = Cp_comb_out/Cv_comb_out;
 
+
     % Power stroke
     if Ca(i) > 360 && Ca(i) < 540
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
+
         C3 = p(721)*V(721)^gamma_comb_out;
         C4 = T(721)*V(721)^(gamma_comb_out-1);
         p(i) = C3/V(i)^(gamma_comb_out);         % Poisson relations
         T(i) = C4/V(i)^(gamma_comb_out-1);       % Poisson relations
     end
+
     for n=1:5
         Cvi_ps_out(n) =CvNasa(T(1080),SpSGasoline(n));           % Get Cv from Nasa-table
     end
     Cv_ps_out = dot(Y_comb_out,Cvi_ps_out);
+
+
     % Heat release
     if Ca(i) == 540      
 
@@ -246,6 +218,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         T(i) = T0;
         m(i) = p(i)*V(i)/Rg_after_comb/T(i);
     end
+
 
     % Heat loss
 
