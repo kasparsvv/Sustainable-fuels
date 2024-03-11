@@ -159,17 +159,16 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     end
 
     % Ignition
-    if Ca(i) >= Cas && Ca(i) < CaF
+    if Ca(i) >= CaS && Ca(i) < 540
         for n=1:5
-        Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));           % Get Cv from Nasa-table
+        Cvi_comb_in(n) =CvNasa(T(700),SpSGasoline(n));           % Get Cv from Nasa-table
         end
-        Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);
+        Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);                                    
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));        
         m_fuel = m(365)/(1+AirFuelRatioGasoline);
 
         Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
         %dQcom = m_fuel*Q_LHV_E0;                                % Heat Release by combustion
-        Qlhv = 46.4e6;
         
         dQcom(i) = QModel(Ca(i),CaS,CaD,m_fuel,Q_LHV_E0);         % Heat Release by combustion (Wiebe)
 
@@ -189,15 +188,15 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     gamma_comb_out = Cp_comb_out/Cv_comb_out;
 
 
-    % Power stroke
-    if Ca(i) > CaF && Ca(i) < 540
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
-
-        C3 = p(721)*V(721)^gamma_comb_out;
-        C4 = T(721)*V(721)^(gamma_comb_out-1);
-        p(i) = C3/V(i)^(gamma_comb_out);         % Poisson relations
-        T(i) = C4/V(i)^(gamma_comb_out-1);       % Poisson relations
-    end
+    % % Power stroke
+    % if Ca(i) > CaF && Ca(i) < 540
+    %     m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
+    % 
+    %     C3 = p(771)*V(771)^gamma_comb_out;
+    %     C4 = T(771)*V(771)^(gamma_comb_out-1);
+    %     p(i) = C3/V(i)^(gamma_comb_out);         % Poisson relations
+    %     T(i) = C4/V(i)^(gamma_comb_out-1);       % Poisson relations
+    % end
 
     for n=1:5
         Cvi_ps_out(n) =CvNasa(T(1080),SpSGasoline(n));           % Get Cv from Nasa-table
