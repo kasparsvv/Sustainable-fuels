@@ -21,8 +21,9 @@ Ca(1) = 0;              % Initial crank angle
 RPM = 3000;             % [Hz] Rotation per minute of crankshaft
 
 S_p = 2 * RPM/60 * S;   % [m/s] Mean piston speed
-CaD= 50;                % Combustion duration (should be between 10 and 70)
-CaS= 350;               %
+CaD = 35;               % Combustion duration (should be between 10 and 70)
+CaS = 350;              % Crank angle at start of combustion
+CaF = CaS + CaD;        % Final crank angle end of combustion
 %% Loop variables/presets
 
 NCa=720;                % Number of crank-angles

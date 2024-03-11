@@ -149,7 +149,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
 
 
     % Compression
-    if Ca(i) >= 180 && Ca(i) < 360
+    if Ca(i) >= 180 && Ca(i) < CaS
         C1 = p(360)*V(360)^gamma_comp_in;
         C2 = T(360)*V(360)^(gamma_comp_in-1);
 
@@ -159,7 +159,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     end
 
     % Ignition
-    if Ca(i) == 360
+    if Ca(i) >= Cas && Ca(i) < CaF
         for n=1:5
         Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));           % Get Cv from Nasa-table
         end
@@ -169,8 +169,9 @@ for i=2:NSteps                          % Calculate values for 1 cycle
 
         Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
         %dQcom = m_fuel*Q_LHV_E0;                                % Heat Release by combustion
+        Qlhv = 46.4e6;
         
-        dQcom(i) = QModel(Ca,CaS,CaD,m_fuel,Q_LHV_E0);         % Heat Release by combustion (Wiebe)
+        dQcom(i) = QModel(Ca(i),CaS,CaD,m_fuel,Q_LHV_E0);         % Heat Release by combustion (Wiebe)
 
         dT(i)=(dQcom(i)-p(i-1)*dV)/Cv_comb_in/m(i-1);           % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
@@ -189,7 +190,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
 
 
     % Power stroke
-    if Ca(i) > 360 && Ca(i) < 540
+    if Ca(i) > CaF && Ca(i) < 540
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
 
         C3 = p(721)*V(721)^gamma_comb_out;
@@ -241,48 +242,48 @@ end
 
 %% Plot pV-diagram
 
-figure;
-plot(Ca, V);
-xlabel('Crank angle');
-ylabel('Volume (m^3)');
-title('Crank angle VC Volume');
-grid on;
+% figure;
+% plot(Ca, V);
+% xlabel('Crank angle');
+% ylabel('Volume (m^3)');
+% title('Crank angle VC Volume');
+% grid on;
 
 
 figure;
 plot(V, p);
 xlabel('Volume (m^3)');
 ylabel('Pressure (Pa)');
-title('pV-diagram for the Otto cycle');
+title('pV-diagram for the Otto cycle + Wiebe');
 grid on;
 
-figure;
-loglog(V, p);
-xlabel('Volume (m^3)');
-ylabel('Pressure (Pa)');
-title('pV-diagram for the Otto cycle (Log-Log scale)'); 
-grid on;
-
-figure;
-plot(Ca, T);
-xlabel('Crank angle (Ca)');
-ylabel('Temperature(K)');
-title('Crank angle over Temperature');
-grid on;
-
-figure;
-plot(Ca, h_woschni);
-xlabel('Crank angle (Ca)');
-ylabel('transfer coefficient h');
-title('Convective heat coefficient vs crank angle (WOSCHNI)');
-grid on;
-
-figure;
-plot(Ca, h_hohenberg);
-xlabel('Crank angle (Ca)');
-ylabel('transfer coefficient h');
-title('Convective heat coefficient vs crank angle (hohenberg)');
-grid on;
+% figure;
+% loglog(V, p);
+% xlabel('Volume (m^3)');
+% ylabel('Pressure (Pa)');
+% title('pV-diagram for the Otto cycle (Log-Log scale)'); 
+% grid on;
+% 
+% figure;
+% plot(Ca, T);
+% xlabel('Crank angle (Ca)');
+% ylabel('Temperature(K)');
+% title('Crank angle over Temperature');
+% grid on;
+% 
+% figure;
+% plot(Ca, h_woschni);
+% xlabel('Crank angle (Ca)');
+% ylabel('transfer coefficient h');
+% title('Convective heat coefficient vs crank angle (WOSCHNI)');
+% grid on;
+% 
+% figure;
+% plot(Ca, h_hohenberg);
+% xlabel('Crank angle (Ca)');
+% ylabel('transfer coefficient h');
+% title('Convective heat coefficient vs crank angle (hohenberg)');
+% grid on;
 
 %% Function of V_cyl
 function V_cyl = Vcyl(Ca, S, B, l, rc)
@@ -316,18 +317,18 @@ end
 
 %% Wiebe function
 
-function [Q] = QModel(Ca,CaS,CaD,m_fuel,Q_LHV_E0)
-%Qmodel(Ca):: computes heat release by combustion
-a = 5;
-n = 3;
-%   Input: Ca, crank angle
-global Runiv
-if (isempty(Runiv))
-    fprintf('[Qmodel] Assign global Runiv\n');
-    return
-end
-xb = 1-exp(-a*((Ca-CaS)/CaD).^n);                                                  %Amount of fuel converted, Formula from project handbook page 13
-dQcomb_di = Q_LHV_E0 * m_fuel * n * a * ((1-xb)/CaD) .* ((Ca-CaS)/CaD).^(n-1);    %Heat release, Formula from project handbook page 14
-Q=dQcomb_di;
+function [dQcomb] = QModel(Ca,CaS,CaD,mfuel,Q_LHV_E0)
+
+    global Runiv
+    if (isempty(Runiv))
+        fprintf('[Qmodel] Assign global Runiv\n');
+        return
+    end
+
+    a = 5; % Wiebe constant 
+    n = 3; % Wiebe constant
+
+    xb = 1 - exp(-a * ((Ca - CaS) / CaD) .^ n); % Fuel consumption based on the crank angle
+    dQcomb = Q_LHV_E0 * mfuel * n * a * ((1 - xb) / CaD) .* ((Ca - CaS) / CaD) .^ (n - 1); % Heat release, Formula from project handbook page 14
 
 end
