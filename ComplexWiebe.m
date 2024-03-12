@@ -158,7 +158,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         T(i) = C2/(V(i)^(gamma_comp_in - 1));       % Poisson relations
     end
 
-    % Ignition
+    % Combustion
     if Ca(i) >= CaS && Ca(i) < 540
         for n=1:5
         Cvi_comb_in(n) =CvNasa(T(700),SpSGasoline(n));           % Get Cv from Nasa-table
