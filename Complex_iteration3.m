@@ -10,6 +10,7 @@ load(TdataBase);
 run("AFcalculations.m");
 run("Fraction_calculations.m");
 run("system_parameters.m");
+run("Carburetor.m")
 
 %% Constants
 
@@ -99,6 +100,14 @@ pad(1) = p(1);
 Ca(1) = 0;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
 m(1) = p(1)*V(1)/Rg_before_comb/T(1);
+Q_loss(1) = 100;
+gamma_comb_out = 1.236322380761674;
+gamma_comb_in = 1.360214357127973;
+
+Rg_before_comb = 2.744179546614579e+02;
+Rg_after_comb = 2.860747563192256e+02;
+
+Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
 
 for i = 1:NSteps
     Ca_i = (i - 1) * dCa;  % Current crank angle
@@ -126,10 +135,10 @@ for i = 1:NSteps
 end
 
 %% Loop over the crank angles using a For-loop
-for i=2:NSteps                          % Calculate values for 1 cycle
+for i=2:NSteps                                                                              % Calculate values for 1 cycle
     Ca(i)=Ca(i-1)+dCa;
-    V(i)=Vcyl(Ca(i),S,B,l,rc);          % New volume for current crank-angle
-    dV=V(i)-V(i-1);                     % Volume change
+    V(i)=Vcyl(Ca(i),S,B,l,rc);                                                              % New volume for current crank-angle
+    dV=V(i)-V(i-1);                                                                         % Volume change
 
     % Intake
     if Ca(i) >= 0 && Ca(i) < 180
@@ -138,6 +147,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         m(i) = p(i)*V(i)/Rg_before_comb/T(i);
 
     end
+
     for n=1:5
             Cvi(n) = CvNasa(T(360),SpSGasoline(n));
             Cpi(n) = CpNasa(T(360),SpSGasoline(n));
@@ -145,68 +155,44 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     Cv_comp_in = dot(Y_comp_in,Cvi);
     Cp_comp_in = dot(Y_comp_in,Cpi);
 
-    gamma_comp_in = Cp_comp_in/Cv_comp_in;
-
 
     % Compression
-    if Ca(i) >= 180 && Ca(i) < 360
-        C1 = p(360)*V(360)^gamma_comp_in;
-        C2 = T(360)*V(360)^(gamma_comp_in-1);
+    if Ca(i) >= 180 && Ca(i) < 361
 
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
-        p(i) = C1/(V(i)^(gamma_comp_in));           % Poisson relations
-        T(i) = C2/(V(i)^(gamma_comp_in - 1));       % Poisson relations
+        dT(i)=(-p(i-1)*dV)/Cv_comp_in/m(i-1);                                               % 1st Law dU=dQ-pdV (closed system)
+        T(i)=T(i-1)+dT(i);
+
+        p(i)=m(i)*Rg_before_comb*T(i)/V(i);      
     end
 
     % Ignition
-    if Ca(i) > 360 && Ca(i) < 380
+    if Ca(i) > 360 && Ca(i) < 540
+
         for n=1:5
-        Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));           % Get Cv from Nasa-table
+        Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));                                      % Get Cv from Nasa-table
         end
+
         Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));        
         m_fuel = m(365)/(1+AirFuelRatioGasoline);
 
         Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
-        dQcom = m_fuel*Q_LHV_E0;                                % Heat Release by combustion
+        dQcom(i) = QModel(Ca(i),CaS,CaD,m_fuel,Q_LHV_E0);                                                         % Heat Release by combustion
 
-        dT(i)=(dQcom - Q_loss(i-1)/360/25 * dCa -p(i-1)*dV)/Cv_comb_in/m(i-1);              % 1st Law dU=dQ-pdV (closed system)
+        dT(i)=(dQcom(i) - Q_loss(i-1)/360/25 * dCa -p(i-1)*dV)/Cv_comb_in/m(360);                                          % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
-
-        p(i)=m(i)*Rg_before_comb*T(i)/V(i);                     % Gaslaw       
+        p(i)=m(i)*Rg_before_comb*T(i)/V(i);                                                 % Gaslaw       
     end
-
     for n=1:5
-    Cvi_comb_out(n) = CvNasa(T(721),SpSGasoline(n));
-    Cpi_comb_out(n) = CpNasa(T(721),SpSGasoline(n));
-    end
-    Cv_comb_out = dot(Y_comb_out,Cvi_comb_out);
-    Cp_comb_out = dot(Y_comb_out,Cpi_comb_out);
-
-    gamma_comb_out = Cp_comb_out/Cv_comb_out;
-
-
-    % Power stroke
-    if Ca(i) > 380 && Ca(i) < 540
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
-
-        C3 = p(721)*V(721)^gamma_comb_out;
-        C4 = T(721)*V(721)^(gamma_comb_out-1);
-        p(i) = C3/V(i)^(gamma_comb_out);         % Poisson relations
-        T(i) = C4/V(i)^(gamma_comb_out-1);       % Poisson relations
-    end
-
-    for n=1:5
-        Cvi_ps_out(n) =CvNasa(T(1080),SpSGasoline(n));           % Get Cv from Nasa-table
+        Cvi_ps_out(n) =CvNasa(T(1080),SpSGasoline(n));                                      % Get Cv from Nasa-table
     end
     Cv_ps_out = dot(Y_comb_out,Cvi_ps_out);
 
 
     % Heat release
     if Ca(i) == 540      
-
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));     
-
+        m(i) = p(1)*V(361)/(Rg_after_comb*T(1));    
         p(i) = p0;         
         T(i) = T0;  
         Q_c = Cv_ps_out * m(i) * (T(i)-T(i-1));
@@ -219,21 +205,12 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         m(i) = p(i)*V(i)/Rg_after_comb/T(i);
     end
 
-
     % Heat loss
-
-    A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
-
-    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out); % [Pa] Motorized cylinder pressure
-
-    w(i) = B1(i)*S_p + B2(i)*((max(V)*T_ref)/(P_ref*V_ref)) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
-
-    h_woschni(i) = 3.26 * B^(-0.2) * p(i)^(0.8) * T(i)^(-0.55) * w(i)^0.8; % [W/(m^2*K)]
-
-    Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
-
-    % h_hohenberg(i) = 140 * V(i)^(-0.06) * p(i)^(0.8) * T(i)^(-0.4) * (S_p + 1.4)^(0.8);
-    % h_eichelberg(i) = 7.799 * 10^(-3) * S_p^(1/3) * p(i)^(0.5) * T(i)^(0.5);
+    A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2)));             % [m^2] Instantaneous inner cylinder area 
+    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out);                                    % [Pa] Motorized cylinder pressure
+    w(i) = B1(i)*S_p + B2(i)*((max(V)*T_ref)/(P_ref*V_ref)) * (p(i) - p_motor2(i));         % [m/s] Effective gas velocity
+    h_woschni(i) = 0.02 * B^(-0.2) * p(i)^(0.8) * T(i)^(-0.55) * w(i)^0.8;                  % [W/(m^2*K)]
+    Q_loss(i) = h_woschni(i) * A(i) * (T(i) -400);                                         % [W] Convective heat loss to the inner cylinder wall
 
 end
 
@@ -276,11 +253,25 @@ title('Convective heat coefficient vs crank angle (WOSCHNI)');
 grid on;
 
 figure;
-plot(Ca, h_hohenberg);
+plot(Ca, Q_loss);
 xlabel('Crank angle (Ca)');
-ylabel('transfer coefficient h');
-title('Convective heat coefficient vs crank angle (hohenberg)');
+ylabel('Heat loss Q [W]');
+title('Heat loss due to convection');
 grid on;
+
+figure;
+plot(Ca, dQcom);
+xlabel('Crank angle (Ca)');
+ylabel('Heat generated from combustion [W]');
+title('Heat generated from combustion');
+grid on;
+
+% figure;
+% plot(Ca, h_hohenberg);
+% xlabel('Crank angle (Ca)');
+% ylabel('transfer coefficient h');
+% title('Convective heat coefficient vs crank angle (hohenberg)');
+% grid on;
 
 %% Function of V_cyl
 function V_cyl = Vcyl(Ca, S, B, l, rc)
@@ -310,4 +301,21 @@ function [Q_LHV] = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasol
     MassN2 = (MoleN2*0.0280)/(MiGasoline(1));
 
 Q_LHV = -MassN2*HNasa(T_ref_QLHV,SpSGasoline(5))-MassCO2*HNasa(T_ref_QLHV,SpSGasoline(3)) - MassH2O*HNasa(T_ref_QLHV,SpSGasoline(4)) + MassO2*HNasa(T_ref_QLHV,SpSGasoline(2)) + HNasa(T_ref_QLHV,SpSGasoline(1));
+end
+
+%% Wiebe function
+
+function [dQcomb] = QModel(Ca,CaS,CaD,m_fuel,Q_LHV_E0)
+%Qmodel(Ca):: computes heat release by combustion
+a = 5;
+n = 3;
+%   Input: Ca, crank angle
+global Runiv
+if (isempty(Runiv))
+    fprintf('[Qmodel] Assign global Runiv\n');
+    return
+end
+    xb = 1-exp(-a*((Ca-360)/30)^n);                                                  %Amount of fuel converted, Formula from project handbook page 13
+    dQcomb = Q_LHV_E0 * m_fuel * n * a * ((1-xb)/30)* ((Ca-360)/30)^(n-1);    %Heat release, Formula from project handbook page 14
+
 end

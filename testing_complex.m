@@ -10,6 +10,7 @@ load(TdataBase);
 run("AFcalculations.m");
 run("Fraction_calculations.m");
 run("system_parameters.m");
+run("Carburetor.m")
 
 %% Constants
 
@@ -52,9 +53,6 @@ MassOxygenE = MolesOxygenE*MiEthanol(2);    % The mass of this oxygen
 MassAirE = MassOxygenE + (MassOxygenE/Yair(2))*Yair(5); % Mass of air (Oxygen + Nitrogen)
 AirFuelRatioEthanol = MassAirE / 1;  % Air-fuel ratio for Ethanol
 
-
-
-
 % Composition Gasoline
 cFuelGasoline = 'Gasoline';
 iSpGasoline = myfind({Sp.Name},{cFuelGasoline,'O2','CO2','H2O','N2'});                    % Find indexes of these species
@@ -69,36 +67,28 @@ MolesGasoline = 1/MGasoline;                  % Amount of moles gasoline per mas
 MolesOxygenG = MolesGasoline*12.5;              % Amount of moles Oxygen for this amount of gasoline
 MassOxygenG = MolesOxygenG*MiGasoline(2);    % The mass of this oxygen
 MassAirG = MassOxygenG + (MassOxygenG/Yair(2))*Yair(5); % Mass of air (Oxygen + Nitrogen)
-%AirFuelRatioGasoline = MassAirG / 1;         % Air-fuel ratio for Gasoline 
-
-
 
 VolumeEthanol = Evalue/100;
 VolumeGasoline = (100-Evalue)/100;
 
 MassEthanol = DensityEthanol*VolumeEthanol;            % Ethanol = 789 kg/m^3
 MassGasoline = DensityGasoline*VolumeGasoline;          % Gasoline = 749 kg/m^3   
-%Mass fractions
-%MassFractionEthanol = MassEthanol/(MassEthanol+MassGasoline);
-%MassFractionGasoline = MassGasoline/(MassEthanol+MassGasoline);
-
-%MFuel = MassFractionEthanol*MEthanol + MassFractionGasoline*MGasoline;      % Molar mass of the fuel mixture
-%mfuel = 1;               %Fuel mass inside the cylinder, used for Qmodel, not defined yet
-
-%AirFuelRatio = MassFractionEthanol*AirFuelRatioEthanol + MassFractionGasoline*AirFuelRatioGasoline;     % Air-fuel ratio for the fuel mixture 
-%MFuelAir = MFuel + AirFuelRatio*MFuel;          % Mass of air = Air-Fuel ratio * Mass of the fuel
-
-%Rg = Runiv/MFuelAir;   %Specific gas constant
-%Rg = 290;
 
 %% Initialisation
 
 p(1) = p0;
 T(1) = T0;
 pad(1) = p(1);
-Ca(1) = 0;
+Ca(1) = 1;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
 m(1) = p(1)*V(1)/Rg_before_comb/T(1);
+NCa=720;                % Number of crank-angles
+dCa=0.5;                % Stepsize
+NSteps=NCa/dCa;
+Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
+Q_loss(1) = 0;
+Rg = 300;
+Cv = 800;
 
 for i = 1:NSteps
     Ca_i = (i - 1) * dCa;  % Current crank angle
@@ -107,17 +97,18 @@ for i = 1:NSteps
     if Ca_i >= 0 && Ca_i < 180
         B1(i) = 6.18;
         B2(i) = 0;
-        
+
     % Compression stroke
     elseif Ca_i >= 180 && Ca_i < 360
         B1(i) = 2.28;
         B2(i) = 0;
-        
+
     % Power stroke / Combustion / Expansion
     elseif Ca_i >= 360 && Ca_i < 540
         B1(i) = 2.28;
         B2(i) = 3.24 * 10^-3;
-        
+        dQcom(i) = massflowFuel * Q_LHV_E0;
+
     % Exhaust stroke
     elseif Ca_i >= 540 && Ca_i <= 720
         B1(i) = 6.18;
@@ -126,114 +117,31 @@ for i = 1:NSteps
 end
 
 %% Loop over the crank angles using a For-loop
-for i=2:NSteps                          % Calculate values for 1 cycle
-    Ca(i)=Ca(i-1)+dCa;
-    V(i)=Vcyl(Ca(i),S,B,l,rc);          % New volume for current crank-angle
-    dV=V(i)-V(i-1);                     % Volume change
-
-    % Intake
-    if Ca(i) >= 0 && Ca(i) < 180
-        p(i) = p0;
-        T(i) = T0;
-        m(i) = p(i)*V(i)/Rg_before_comb/T(i);
-
-    end
-    for n=1:5
-            Cvi(n) = CvNasa(T(360),SpSGasoline(n));
-            Cpi(n) = CpNasa(T(360),SpSGasoline(n));
-    end
-    Cv_comp_in = dot(Y_comp_in,Cvi);
-    Cp_comp_in = dot(Y_comp_in,Cpi);
-
-    gamma_comp_in = Cp_comp_in/Cv_comp_in;
 
 
-    % Compression
-    if Ca(i) >= 180 && Ca(i) < 360
-        C1 = p(360)*V(360)^gamma_comp_in;
-        C2 = T(360)*V(360)^(gamma_comp_in-1);
+for i=2:NSteps
+        Ca(i)=Ca(i-1)+dCa;
+        V(i)=Vcyl(Ca(i),S,B,l,rc); % New volume for current crank-angle
+        m(i)=m(i-1); % Mass is constant, valves are closed
+        dV=V(i)-V(i-1); % Volume change
 
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
-        p(i) = C1/(V(i)^(gamma_comp_in));           % Poisson relations
-        T(i) = C2/(V(i)^(gamma_comp_in - 1));       % Poisson relations
-    end
+        
+        dT=(dQcom(i)-p(i-1)*dV)/Cv/m(i-1); % 1st Law dU=dQ-pdV (closed system), adiabatic closed system with constant gas composition and constant Cv
+        T(i)=T(i-1)+dT;
+        p(i)=m(i)*Rg*T(i)/V(i); % Gaslaw
 
-    % Ignition
-    if Ca(i) > 360 && Ca(i) < 380
-        for n=1:5
-        Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));           % Get Cv from Nasa-table
-        end
-        Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));        
-        m_fuel = m(365)/(1+AirFuelRatioGasoline);
-
-        Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
-        dQcom = m_fuel*Q_LHV_E0;                                % Heat Release by combustion
-
-        dT(i)=(dQcom - Q_loss(i-1)/360/25 * dCa -p(i-1)*dV)/Cv_comb_in/m(i-1);              % 1st Law dU=dQ-pdV (closed system)
-        T(i)=T(i-1)+dT(i);
-
-        p(i)=m(i)*Rg_before_comb*T(i)/V(i);                     % Gaslaw       
-    end
-
-    for n=1:5
-    Cvi_comb_out(n) = CvNasa(T(721),SpSGasoline(n));
-    Cpi_comb_out(n) = CpNasa(T(721),SpSGasoline(n));
-    end
-    Cv_comb_out = dot(Y_comb_out,Cvi_comb_out);
-    Cp_comb_out = dot(Y_comb_out,Cpi_comb_out);
-
-    gamma_comb_out = Cp_comb_out/Cv_comb_out;
-
-
-    % Power stroke
-    if Ca(i) > 380 && Ca(i) < 540
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
-
-        C3 = p(721)*V(721)^gamma_comb_out;
-        C4 = T(721)*V(721)^(gamma_comb_out-1);
-        p(i) = C3/V(i)^(gamma_comb_out);         % Poisson relations
-        T(i) = C4/V(i)^(gamma_comb_out-1);       % Poisson relations
-    end
-
-    for n=1:5
-        Cvi_ps_out(n) =CvNasa(T(1080),SpSGasoline(n));           % Get Cv from Nasa-table
-    end
-    Cv_ps_out = dot(Y_comb_out,Cvi_ps_out);
-
-
-    % Heat release
-    if Ca(i) == 540      
-
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));     
-
-        p(i) = p0;         
-        T(i) = T0;  
-        Q_c = Cv_ps_out * m(i) * (T(i)-T(i-1));
-    end
-
-    % Exhaust
-    if Ca(i) >= 540 && Ca(i) <= 720
-        p(i) = p0;
-        T(i) = T0;
-        m(i) = p(i)*V(i)/Rg_after_comb/T(i);
-    end
-
+        % for j=1:NSteps
+        %     Cvi(j) = CvNasa(T(i),SpS(j)); % Replaced YourNasa function
+        % end
+        % Y(i,:) = Y(i-1,:); % Assumes constant mass ratios (needs to be improved)
+        % Cv(i) = Y(i,:) * Cvi'; % heat cap at current T
 
     % Heat loss
-
-    A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
-
-    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out); % [Pa] Motorized cylinder pressure
-
-    w(i) = B1(i)*S_p + B2(i)*((max(V)*T_ref)/(P_ref*V_ref)) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
-
-    h_woschni(i) = 3.26 * B^(-0.2) * p(i)^(0.8) * T(i)^(-0.55) * w(i)^0.8; % [W/(m^2*K)]
-
-    Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
-
-    % h_hohenberg(i) = 140 * V(i)^(-0.06) * p(i)^(0.8) * T(i)^(-0.4) * (S_p + 1.4)^(0.8);
-    % h_eichelberg(i) = 7.799 * 10^(-3) * S_p^(1/3) * p(i)^(0.5) * T(i)^(0.5);
+    % A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
+    % p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out); % [Pa] Motorized cylinder pressure
+    % w(i) = B1(i)*S_p + B2(i)*((max(V)*T_ref)/(P_ref*V_ref)) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
+    % h_woschni(i) = 3.26 * B^(-0.2) * p(i)^(0.8) * T(i)^(-0.55) * w(i)^0.8; % [W/(m^2*K)]
+    % Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
 
 end
 
@@ -268,19 +176,12 @@ ylabel('Temperature(K)');
 title('Crank angle over Temperature');
 grid on;
 
-figure;
-plot(Ca, h_woschni);
-xlabel('Crank angle (Ca)');
-ylabel('transfer coefficient h');
-title('Convective heat coefficient vs crank angle (WOSCHNI)');
-grid on;
-
-figure;
-plot(Ca, h_hohenberg);
-xlabel('Crank angle (Ca)');
-ylabel('transfer coefficient h');
-title('Convective heat coefficient vs crank angle (hohenberg)');
-grid on;
+% figure;
+% plot(Ca, p_motor2);
+% xlabel('Crank angle (Ca)');
+% ylabel('transfer coefficient h');
+% title('Convective heat coefficient vs crank angle (hohenberg)');
+% grid on;
 
 %% Function of V_cyl
 function V_cyl = Vcyl(Ca, S, B, l, rc)

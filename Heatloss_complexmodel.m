@@ -126,7 +126,7 @@ for i = 1:NSteps
 end
 
 %% Loop over the crank angles using a For-loop
-for i=2:NSteps                          % Calculate values for 1 cycle
+for i=2:NSteps
     Ca(i)=Ca(i-1)+dCa;
     V(i)=Vcyl(Ca(i),S,B,l,rc);          % New volume for current crank-angle
     dV=V(i)-V(i-1);                     % Volume change
@@ -159,7 +159,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
     end
 
     % Ignition
-    if Ca(i) > 360 && Ca(i) < 380
+    if Ca(i) == 360
         for n=1:5
         Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));           % Get Cv from Nasa-table
         end
@@ -170,7 +170,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
         Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
         dQcom = m_fuel*Q_LHV_E0;                                % Heat Release by combustion
 
-        dT(i)=(dQcom - Q_loss(i-1)/360/25 * dCa -p(i-1)*dV)/Cv_comb_in/m(i-1);              % 1st Law dU=dQ-pdV (closed system)
+        dT(i)= (dQcom - Q_loss(i-1)/(360*25)*dCa - p(i-1)*dV) /Cv_comb_in/m(i-1);              % 1st Law dU=dQ-pdV (closed system)
         T(i)=T(i-1)+dT(i);
 
         p(i)=m(i)*Rg_before_comb*T(i)/V(i);                     % Gaslaw       
@@ -187,7 +187,7 @@ for i=2:NSteps                          % Calculate values for 1 cycle
 
 
     % Power stroke
-    if Ca(i) > 380 && Ca(i) < 540
+    if Ca(i) > 360 && Ca(i) < 540
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
 
         C3 = p(721)*V(721)^gamma_comb_out;
@@ -204,7 +204,6 @@ for i=2:NSteps                          % Calculate values for 1 cycle
 
     % Heat release
     if Ca(i) == 540      
-
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));     
 
         p(i) = p0;         
@@ -232,10 +231,9 @@ for i=2:NSteps                          % Calculate values for 1 cycle
 
     Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
 
-    % h_hohenberg(i) = 140 * V(i)^(-0.06) * p(i)^(0.8) * T(i)^(-0.4) * (S_p + 1.4)^(0.8);
-    % h_eichelberg(i) = 7.799 * 10^(-3) * S_p^(1/3) * p(i)^(0.5) * T(i)^(0.5);
-
+   
 end
+
 
 %% Plot pV-diagram
 
