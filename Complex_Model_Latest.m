@@ -200,18 +200,16 @@ for i=2:NSteps
     % Heat release
     if Ca(i) == 540      
         m(i) = p(1)*V(361)/(Rg_after_comb*T(1));    
-        p(i) = p0;         
-        T(i) = T(i-1);  
+        p(i) = p(i-1);
+        T(i) = T(i-1);
         Q_c = Cv_ps_out * m(i) * (T(i)-T(i-1));
-        
     end
 
     % Exhaust
     if Ca(i) >= 540 && Ca(i) <= 720
-        p(i) = p0;
-        T(i) = T0;
+        p(i) = p(i-1);
+        T(i) = T(i-1);
         m(i) = p(i)*V(i)/Rg_after_comb/T(i);
-
     end
 
     A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
@@ -230,26 +228,26 @@ end
 
 %% Plot pV-diagram
 
-figure;
-plot(Ca, V);
-xlabel('Crank angle');
-ylabel('Volume (m^3)');
-title('Crank angle VC Volume');
-grid on;
-
-figure;
-plot(Ca, Q_loss);
-xlabel('Crank angle');
-ylabel('Volume (m^3)');
-title('heat loss');
-grid on;
-
-figure;
-plot(Ca, p_motor2);
-xlabel('Crank angle');
-ylabel('Volume (m^3)');
-title('heat loss');
-grid on;
+% figure;
+% plot(Ca, V);
+% xlabel('Crank angle');
+% ylabel('Volume (m^3)');
+% title('Crank angle VC Volume');
+% grid on;
+% 
+% figure;
+% plot(Ca, Q_loss);
+% xlabel('Crank angle');
+% ylabel('Volume (m^3)');
+% title('heat loss');
+% grid on;
+% 
+% figure;
+% plot(Ca, p_motor2);
+% xlabel('Crank angle');
+% ylabel('Volume (m^3)');
+% title('heat loss');
+% grid on;
 
 
 figure;
@@ -259,33 +257,33 @@ ylabel('Pressure (Pa)');
 title('pV-diagram for the complex cycle');
 grid on;
 
-figure;
-loglog(V, p);
-xlabel('Volume (m^3)');
-ylabel('Pressure (Pa)');
-title('pV-diagram for the complex cycle (Log-Log scale)'); 
-grid on;
-
-figure;
-plot(Ca, T);
-xlabel('Crank angle (Ca)');
-ylabel('Temperature(K)');
-title('Crank angle over Temperature');
-grid on;
-
-figure;
-plot(Ca, h_woschni);
-xlabel('Crank angle (Ca)');
-ylabel('transfer coefficient h');
-title('Convective heat coefficient vs crank angle (WOSCHNI)');
-grid on;
-
-figure;
-plot(Ca, h_hohenberg);
-xlabel('Crank angle (Ca)');
-ylabel('transfer coefficient h');
-title('Convective heat coefficient vs crank angle (hohenberg)');
-grid on;
+% figure;
+% loglog(V, p);
+% xlabel('Volume (m^3)');
+% ylabel('Pressure (Pa)');
+% title('pV-diagram for the complex cycle (Log-Log scale)'); 
+% grid on;
+% 
+% figure;
+% plot(Ca, T);
+% xlabel('Crank angle (Ca)');
+% ylabel('Temperature(K)');
+% title('Crank angle over Temperature');
+% grid on;
+% 
+% figure;
+% plot(Ca, h_woschni);
+% xlabel('Crank angle (Ca)');
+% ylabel('transfer coefficient h');
+% title('Convective heat coefficient vs crank angle (WOSCHNI)');
+% grid on;
+% 
+% figure;
+% plot(Ca, h_hohenberg);
+% xlabel('Crank angle (Ca)');
+% ylabel('transfer coefficient h');
+% title('Convective heat coefficient vs crank angle (hohenberg)');
+% grid on;
 
 %% Function of V_cyl
 function V_cyl = Vcyl(Ca, S, B, l, rc)
