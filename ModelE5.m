@@ -47,6 +47,7 @@ V_c = pi/4 * B^2 * TDC; % [m63] Compression volume (will change)
 P_atm  = 1;             % [Bar] Atmospheric pressure (assumed for now)
 Ca(1) = 0;              % Initial crank angle
 
+
 %% Fuel computations
 
 Evalue = 10;          % E-number of the fuel
@@ -121,6 +122,11 @@ MassGasoline = DensityGasoline*VolumeGasoline;          % Gasoline = 749 kg/m^3
 
 %Rg = Runiv/MFuelAir;   %Specific gas constant
 %Rg = 290;
+
+%% Power required from engine
+Load = 3300;                                      % [Watt] Power required from engine
+required_work = 2 * Load/(3000/60);               % Required work per cycle based on load and rpm
+
 %% Reference temperature for LHV
 T_ref_QLHV = 20+273.15;
 
@@ -151,6 +157,16 @@ m(1) = p(1)*V(1)/Rg_E5_before_comb/T(1);
 %gamma = 1.4;
 %C1 = p(1)*V(1)^gamma;       % Poisson relations
 %C2 = T(1)*V(1)^(gamma-1);   % Poisson relations
+
+ %% Start code iterative loop to get intake pressure
+% prev_work_output = 0
+% 
+% % Define convergence criteria
+% max_iterations = 100;
+% tolerance = 1e-5;
+% 
+% for iter = 1:max_iterations
+
 
 %% Loop over the crank angles using a For-loop
 
@@ -266,6 +282,24 @@ gamma_average = (gamma_comb_out+gamma_comp_in) / 2;
 ottoefficiency =(1-(1/rc)^(gamma_average-1)) *100;
 P_E5 = W_E5 * (RPM/60) * (1/n_rpc);
 bsfc = m_fuel*1000/(W_E5/3600000);
+% 
+ %% End code iterative loop intake pressure
+% tolerance = 1e-5; %just a small number indicating that there is almost no difference
+% 
+%     % Check for convergence
+%     if abs(W_E5 - required_work) < tolerance
+%         disp('Converged to achieve the desired power output.');
+%     end
+% 
+%     % Update previous power output for next iteration
+%     prev_work_output = W_E5;
+% 
+% % Calculate the difference between load and power output
+%     power_difference = required_work - W_E5;
+% 
+%     % Adjust intake pressure proportionally to the difference
+%     p0 = p0 + 20 * power_difference; % Adjust the factor 0.1 as needed
+%     end
 %% Plot pV-diagram
 
 figure;
