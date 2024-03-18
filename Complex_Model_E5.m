@@ -99,13 +99,14 @@ T(1) = T0;
 pad(1) = p(1);
 Ca(1) = 0;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
-m(1) = p(1)*V(1)/Rg_before_comb/T(1);
+m(1) = p(1)*V(1)/Rg_E5_before_comb/T(1);
 Q_loss(1) = 0;
-gamma_comb_out = 1.236322380761674;
-gamma_comb_in = 1.360214357127973;
 
-Rg_before_comb = 2.744179546614579e+02;
-Rg_after_comb = 2.860747563192256e+02;
+gamma_comb_out = 1.236086892659820;
+gamma_comb_in = 1.360190260818635;
+
+%Rg_before_comb = Rg_E5_before_comb;
+%Rg_after_comb = Rg_E5_after_comb;
 
 for i = 1:NSteps+1
     Ca_i = (i - 1) * dCa;  % Current crank angle
@@ -142,64 +143,64 @@ for i=2:NSteps+1
     if Ca(i) >= 0 && Ca(i) < 180
         p(i) = p0;
         T(i) = T0;
-        m(i) = p(i)*V(i)/Rg_before_comb/T(i);
+        m(i) = p(i)*V(i)/Rg_E5_before_comb/T(i);
 
     end
 
-    for n=1:5
-            Cvi(n) = CvNasa(T(360),SpSGasoline(n));
-            Cpi(n) = CpNasa(T(360),SpSGasoline(n));
+    for n=1:6
+            Cvi(n) = CvNasa(T(360),SpSE5(n));
+            Cpi(n) = CpNasa(T(360),SpSE5(n));
     end
-    Cv_comp_in = dot(Y_comp_in,Cvi);
-    Cp_comp_in = dot(Y_comp_in,Cpi);
+    Cv_comp_in = dot(Y_E5_comp_in,Cvi);
+    Cp_comp_in = dot(Y_E5_comp_in,Cpi);
 
 
     % Compression
     if Ca(i) >= 180 && Ca(i) < 340
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
+        m(i) = p(1)*V(361)/(Rg_E5_before_comb*T(1));
         dT(i)=(-Q_loss(i-1) -p(i-1)*dV)/Cv_comp_in/m(i-1);
         T(i)=T(i-1)+dT(i);
-        p(i)=m(i)*Rg_before_comb*T(i)/V(i);  
+        p(i)=m(i)*Rg_E5_before_comb*T(i)/V(i);  
 
     end
 
     % Ignition
     if Ca(i) >= 340 && Ca(i) <= 540
 
-        for n=1:5
-        Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));
+        for n=1:6
+        Cvi_comb_in(n) =CvNasa(T(720),SpSE5(n));
         end
-        Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);
+        Cv_comb_in = dot(Y_E5_comp_in,Cvi_comb_in);
         m(i) = m(i-1);        
-        m_fuel = m(365)/(1+AirFuelRatioGasoline);
-        Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
-        dQcomb(i) = QModel(Ca(i),CaS,CaD,m_fuel,Q_LHV_E0);
+        m_fuel = m(365)/(1+AirFuelRatioE5);
+        Q_LHV_E5 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,SpSEthanol, MassH20E5Gasoline, MassH20E5Ethanol,MassCO2E5Gasoline,MassCO2E5Ethanol, MassOxygenE5Gasoline, MassOxygenE5Ethanol,MassNitrogenE5Gasoline,MassNitrogenE5Ethanol,MassGasolineE5, MassEthanolE5);
+        dQcomb(i) = QModel(Ca(i),CaS,CaD,m_fuel,Q_LHV_E5);
 
         dT(i)=(dQcomb(i) - Q_loss(i-1) - p(i-1)*dV)/Cv_comb_in/m(i);
         T(i)=T(i-1)+dT(i);
-        p(i)=m(i)*Rg_before_comb*T(i)/V(i); 
+        p(i)=m(i)*Rg_E5_before_comb*T(i)/V(i); 
       
 
-    for n=1:5
-        Cvi_comb_out(n) = CvNasa(T(721),SpSGasoline(n));
-        Cpi_comb_out(n) = CpNasa(T(721),SpSGasoline(n));
+    for n=1:6
+        Cvi_comb_out(n) = CvNasa(T(721),SpSE5(n));
+        Cpi_comb_out(n) = CpNasa(T(721),SpSE5(n));
     end
-    Cv_comb_out = dot(Y_comb_out,Cvi_comb_out);
-    Cp_comb_out = dot(Y_comb_out,Cpi_comb_out);
+    Cv_comb_out = dot(Y_E5_comb_out,Cvi_comb_out);
+    Cp_comb_out = dot(Y_E5_comb_out,Cpi_comb_out);
 
 
     end
 
-    for n=1:5
-        Cvi_ps_out(n) =CvNasa(T(1080),SpSGasoline(n));
+    for n=1:6
+        Cvi_ps_out(n) =CvNasa(T(1080),SpSE5(n));
     end
-    Cv_ps_out = dot(Y_comb_out,Cvi_ps_out);
+    Cv_ps_out = dot(Y_E5_comb_out,Cvi_ps_out);
 
 
 
     % Heat release
     if Ca(i) == 540      
-        m(i) = p(1)*V(361)/(Rg_after_comb*T(1));    
+        m(i) = p(1)*V(361)/(Rg_E5_after_comb*T(1));    
         p(i) = p(i-1);
         T(i) = T(i-1);
         Q_c = Cv_ps_out * m(i) * (T(i)-T(i-1));
@@ -209,14 +210,14 @@ for i=2:NSteps+1
     if Ca(i) >= 540 && Ca(i) <= 720
         p(i) = p(i-1);
         T(i) = T(i-1);
-        m(i) = p(i)*V(i)/Rg_after_comb/T(i);
+        m(i) = p(i)*V(i)/Rg_E5_after_comb/T(i);
     end
 
     % Closing cycle
     if Ca(i) >= 720
         p(i) = p0;
         T(i) = T0;
-        m(i) = p(i)*V(i)/Rg_before_comb/T(i);
+        m(i) = p(i)*V(i)/Rg_E5_before_comb/T(i);
     end
 
     A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
@@ -237,11 +238,11 @@ end
 RPM = 3000; % rounds per minute
 n_rpc = 2; %number of rounds per cycle
 
-W_E0= trapz(V,p);
+W_E5= trapz(V,p);
 totaldQcomb = sum(dQcomb);
-efficiency = W_E0/totaldQcomb*100;
-P_E0 = W_E0 * (RPM/60) * (1/n_rpc);
-bsfc = m_fuel*1000/(W_E0/3600000);
+efficiency = W_E5/totaldQcomb*100;
+P_E5 = W_E5 * (RPM/60) * (1/n_rpc);
+bsfc = m_fuel*1000/(W_E5/3600000);
 
 %% Plot pV-diagram
 
@@ -318,23 +319,19 @@ function V_cyl = Vcyl(Ca, S, B, l, rc)
 end
 
 %% Function of low heating value
-function [Q_LHV] = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline)
+function [Q_LHV] = LowerHeatingValue(T_ref_QLHV,SpSGasoline,SpSEthanol, MassH20E5Gasoline, MassH20E5Ethanol,MassCO2E5Gasoline,MassCO2E5Ethanol, MassOxygenE5Gasoline, MassOxygenE5Ethanol,MassNitrogenE5Gasoline,MassNitrogenE5Ethanol,MassGasolineE5, MassEthanolE5)
 
-    MoleH2O = 6.55;
-    MoleCO2 = 7.76;
-    MoleO2 = 11.035;
-    MoleN2 = 41.5;
-    MassH2O = (MoleH2O*0.0180)/(MiGasoline(1));
-    MassCO2 = (MoleCO2*0.0440)/(MiGasoline(1));
-    MassO2 = (MoleO2*0.0320)/(MiGasoline(1));
-    MassN2 = (MoleN2*0.0280)/(MiGasoline(1));
+    MassH2O = MassH20E5Gasoline + MassH20E5Ethanol;
+    MassCO2 = MassCO2E5Gasoline + MassCO2E5Ethanol;
+    MassO2 = MassOxygenE5Gasoline + MassOxygenE5Ethanol;
+    MassN2 = MassNitrogenE5Gasoline + MassNitrogenE5Ethanol;
 
-Q_LHV = -MassN2*HNasa(T_ref_QLHV,SpSGasoline(5))-MassCO2*HNasa(T_ref_QLHV,SpSGasoline(3)) - MassH2O*HNasa(T_ref_QLHV,SpSGasoline(4)) + MassO2*HNasa(T_ref_QLHV,SpSGasoline(2)) + HNasa(T_ref_QLHV,SpSGasoline(1));
+Q_LHV = -MassCO2*HNasa(T_ref_QLHV,SpSGasoline(3)) - MassH2O*HNasa(T_ref_QLHV,SpSGasoline(4)) + MassGasolineE5*HNasa(T_ref_QLHV,SpSGasoline(1)) + MassEthanolE5*HNasa(T_ref_QLHV,SpSEthanol(1));
 end
 
 %% Wiebe function
 
-function [dQcomb] = QModel(Ca,CaS,CaD,mfuel,Q_LHV_E0)
+function [dQcomb] = QModel(Ca,CaS,CaD,mfuel,Q_LHV_E5)
 
     global Runiv
     if (isempty(Runiv))
@@ -346,6 +343,6 @@ function [dQcomb] = QModel(Ca,CaS,CaD,mfuel,Q_LHV_E0)
     n = 3; % Wiebe constant
 
     xb = 1 - exp(-a * ((Ca - CaS) / CaD) .^ n); % Fuel consumption based on the crank angle
-    dQcomb = Q_LHV_E0 * mfuel * n * a * ((1 - xb) / CaD) .* ((Ca - CaS) / CaD) .^ (n - 1); % Heat release, Formula from project handbook page 14
+    dQcomb = Q_LHV_E5 * mfuel * n * a * ((1 - xb) / CaD) .* ((Ca - CaS) / CaD) .^ (n - 1); % Heat release, Formula from project handbook page 14
 
 end
