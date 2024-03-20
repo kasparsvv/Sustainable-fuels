@@ -155,7 +155,7 @@ for i=2:NSteps+1
 
 
     % Compression
-    if Ca(i) >= 180 && Ca(i) < 340
+    if Ca(i) >= 180 && Ca(i) < 350
         m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
         dT(i)=(-Q_loss(i-1) -p(i-1)*dV)/Cv_comp_in/m(i-1);
         T(i)=T(i-1)+dT(i);
@@ -164,7 +164,7 @@ for i=2:NSteps+1
     end
 
     % Ignition
-    if Ca(i) >= 340 && Ca(i) <= 540
+    if Ca(i) >= 350 && Ca(i) <= 540
 
         for n=1:5
         Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));
@@ -229,7 +229,7 @@ for i=2:NSteps+1
 
     Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
 
-    Q_loss(i) = Q_loss(i)/360/25; % [W] Convective heat loss to the inner cylinder wall
+    Q_loss(i) = Q_loss(i)/360/50; % [W] Convective heat loss to the inner cylinder wall
 
 end
 
