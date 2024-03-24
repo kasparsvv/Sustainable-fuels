@@ -17,19 +17,47 @@ run("Carburetor.m")
 global Runiv
 Runiv=8.314472;
 
-%% Fuel computations
 
-Evalue = 10;          % E-number of the fuel
+%% Determine load and E-value
+
+Evalue = 0;          % E-number of the fuel
+Load = 0;            %Determine load, either full (1), half (0.5) or no (0) load
 
 % Qlvh = Amount of energy per mass of fuel (j)
 if Evalue == 0
-    Qlhv = 46.4e6;            
+    Qlhv = 46.4e6;
+    if Load == 1
+        p0 = 101235;            
+    elseif Load== 0.5
+        p0 = 61300;               
+    elseif Load == 0
+        p0 = 27000;
+    end
 elseif Evalue == 5
     Qlhv = 45.58e6;               % Could not find a value on the internet, this is an approximation
+    if Load == 1
+        p0 = 101235;            
+    elseif Load== 0.5
+        p0 = 61200;               
+    elseif Load == 0
+        p0 = 27000;
+    end
 elseif Evalue == 10
     Qlhv = 43.54e6;
+    if Load == 1
+        p0 = 101235;            
+    elseif Load== 0.5
+        p0 = 61155;               
+    elseif Load == 0
+        p0 = 26912;
+    end
 end
 
+
+
+
+
+%% Fuel computations
 
 
 % Composition Ethanol
