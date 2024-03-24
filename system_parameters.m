@@ -4,8 +4,6 @@ p0 = 1.01235e5 ;        % Ambient Pressure (pa)
 T0 = 293;               % Ambient Temparature (K)
 rc = 8.5;               % Compression ratio (-)
 Runiv = 8.314472;       % Universal gas constant (J / mol·K)
-CaS = 210;              % Crank angle at start of combustion
-CaD = 225-210;          % Combustion duration (in terms of crank angle)
 n = 3;                  % Wiebe form factor, Project handbook says 3 is often used
 a = 5;                  % Wiebe efficiency factor, Project handbook says 5 is often used
 
@@ -15,7 +13,8 @@ l = 0.0842;             % [m] Length of the connecting rod
 B = 0.0677;             % [m] Bore dimension
 TDC = 0.003;            % [m] Top dead center
 BDC = S + TDC;          % [m] Bottom dead center
-V_c = pi/4 * B^2 * TDC; % [m63] Compression volume (will change)
+V_c = pi/4 * B^2 * TDC; % [m^3] Compression volume
+V_d = pi/4 * B^2  * S;  % [m^3] Swept/Displacement volume
 P_atm  = 1;             % [Bar] Atmospheric pressure (assumed for now)
 Ca(1) = 0;              % Initial crank angle
 RPM = 3000;             % [Hz] Rotation per minute of crankshaft
@@ -37,13 +36,6 @@ T = zeros(1, NSteps);
 dQcom = zeros(1, NSteps);
 dT = zeros(1, NSteps);
 m = zeros(1, NSteps);
-
-%% Reference state (360 degrees)
-
-P_ref = 1.859606618881350e+06; % [Pa] Reference pressure taken at crangle angle of 360
-V_ref = 2.640285571312627e-05; % [Pa] Reference volume  taken at crangle angle of 360
-T_ref = 6.333244594935253e+02; % [Pa] Reference temperature taken at crangle angle of 360
-
 
 %% Reference temperature for LHV
 T_ref_QLHV = 20+273.15;

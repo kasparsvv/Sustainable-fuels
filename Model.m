@@ -222,15 +222,15 @@ for i=2:NSteps                          % Calculate values for 1 cycle
 
     % Heat loss
 
-    A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
-
-    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out); % [Pa] Motorized cylinder pressure
-
-    w(i) = B1(i)*S_p + B2(i)*((max(V)*T_ref)/(P_ref*V_ref)) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
-
-    h_woschni(i) = 3.26 * B^(-0.2) * p(i)^(0.8) * T(i)^(-0.55) * w(i)^0.8; % [W/(m^2*K)]
-
-    Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
+    % A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
+    % 
+    % p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out); % [Pa] Motorized cylinder pressure
+    % 
+    % w(i) = B1(i)*S_p + B2(i)*((max(V)*T_ref)/(P_ref*V_ref)) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
+    % 
+    % h_woschni(i) = 3.26 * B^(-0.2) * p(i)^(0.8) * T(i)^(-0.55) * w(i)^0.8; % [W/(m^2*K)]
+    % 
+    % Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
 
     % h_hohenberg(i) = 140 * V(i)^(-0.06) * p(i)^(0.8) * T(i)^(-0.4) * (S_p + 1.4)^(0.8);
     % h_eichelberg(i) = 7.799 * 10^(-3) * S_p^(1/3) * p(i)^(0.5) * T(i)^(0.5);

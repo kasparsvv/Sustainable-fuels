@@ -107,21 +107,22 @@ gamma_comb_in = 1.360214357127973;
 Rg_before_comb = 2.744179546614579e+02;
 Rg_after_comb = 2.860747563192256e+02;
 
+
 for i = 1:NSteps+1
     Ca_i = (i - 1) * dCa;  % Current crank angle
-    
+
     % Intake stroke
     if Ca_i >= 0 && Ca_i < 180
         B1(i) = 6.18;
         B2(i) = 0;
         
     % Compression stroke
-    elseif Ca_i >= 180 && Ca_i < 360
+    elseif Ca_i >= 180 && Ca_i < 350
         B1(i) = 2.28;
         B2(i) = 0;
         
     % Power stroke / Combustion / Expansion
-    elseif Ca_i >= 360 && Ca_i < 540
+    elseif Ca_i >= 350 && Ca_i < 540
         B1(i) = 2.28;
         B2(i) = 3.24 * 10^-3;
         
@@ -132,7 +133,8 @@ for i = 1:NSteps+1
     end
 end
 
-%% Loop over the crank angles using a For-loop
+
+%% Reference state + intake
 for i=2:NSteps+1
     Ca(i)=Ca(i-1)+dCa;
     V(i)=Vcyl(Ca(i),S,B,l,rc); 
@@ -143,8 +145,21 @@ for i=2:NSteps+1
         p(i) = p0;
         T(i) = T0;
         m(i) = p(i)*V(i)/Rg_before_comb/T(i);
-
     end
+       
+    % Reference state
+    if Ca(i) == 180
+        P_ref = p(360);
+        T_ref = T(360);
+        V_ref = V(360);
+    end
+end
+
+%% Loop over the crank angles using a For-loop
+for i=2:NSteps+1
+    Ca(i)=Ca(i-1)+dCa;
+    V(i)=Vcyl(Ca(i),S,B,l,rc); 
+    dV=V(i)-V(i-1); 
 
     for n=1:5
             Cvi(n) = CvNasa(T(360),SpSGasoline(n));
@@ -187,15 +202,12 @@ for i=2:NSteps+1
     Cv_comb_out = dot(Y_comb_out,Cvi_comb_out);
     Cp_comb_out = dot(Y_comb_out,Cpi_comb_out);
 
-
     end
 
     for n=1:5
         Cvi_ps_out(n) =CvNasa(T(1080),SpSGasoline(n));
     end
     Cv_ps_out = dot(Y_comb_out,Cvi_ps_out);
-
-
 
     % Heat release
     if Ca(i) == 540      
@@ -219,20 +231,18 @@ for i=2:NSteps+1
         m(i) = p(i)*V(i)/Rg_before_comb/T(i);
     end
 
+    % Heat loss
     A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
-
     p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out); % [Pa] Motorized cylinder pressure
-
-    w(i) = B1(i)*S_p + B2(i)*((max(V))*T_ref)/(P_ref*V_ref) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
-
+    w(i) = B1(i)*S_p + B2(i)*(V_d*T_ref)/(P_ref*V_ref) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
     h_woschni(i) = 3.26 * B^(-0.2) * (p(i)/1000)^(0.8) * T(i)^(-0.55) * w(i)^0.8; % [W/(m^2*K)]
-
-    Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
-
+    Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 450); % [W] Convective heat loss to the inner cylinder wall
     Q_loss(i) = Q_loss(i)/360/50; % [W] Convective heat loss to the inner cylinder wall
 
 end
 
+
+heat = sum(dQcomb);
 %% Efficiency and Power Calculations
 RPM = 3000; % rounds per minute
 n_rpc = 2; %number of rounds per cycle
@@ -252,12 +262,12 @@ bsfc = m_fuel*1000/(W_E0/3600000);
 % title('Crank angle VC Volume');
 % grid on;
 % 
-% figure;
-% plot(Ca, Q_loss);
-% xlabel('Crank angle');
-% ylabel('Volume (m^3)');
-% title('heat loss');
-% grid on;
+figure;
+plot(Ca, Q_loss);
+xlabel('Crank angle');
+ylabel('Volume (m^3)');
+title('heat loss');
+grid on;
 % 
 % figure;
 % plot(Ca, p_motor2);
@@ -281,20 +291,22 @@ grid on;
 % title('pV-diagram for the complex cycle (Log-Log scale)'); 
 % grid on;
 % 
-% figure;
-% plot(Ca, T);
-% xlabel('Crank angle (Ca)');
-% ylabel('Temperature(K)');
-% title('Crank angle over Temperature');
-% grid on;
-% 
-% figure;
-% plot(Ca, h_woschni);
-% xlabel('Crank angle (Ca)');
-% ylabel('transfer coefficient h');
-% title('Convective heat coefficient vs crank angle (WOSCHNI)');
-% grid on;
-% 
+figure;
+plot(Ca, T);
+xlabel('Crank angle (Ca)');
+ylabel('Temperature(K)');
+xlim([180; 540])
+title('Crank angle over Temperature');
+grid on;
+
+figure;
+plot(Ca, h_woschni);
+xlabel('Crank angle (Ca)');
+ylabel('transfer coefficient h');
+xlim([180; 540])
+title('Convective heat coefficient vs crank angle (WOSCHNI)');
+grid on;
+
 % figure;
 % plot(Ca, h_hohenberg);
 % xlabel('Crank angle (Ca)');
