@@ -1,5 +1,5 @@
-clear all;
-close all;
+%clear all;
+%close all;
 %% Load the NASA tables
 
 relativepath_to_generalfolder='General'; % relative reference to General folder (assumes the folder is in you working folder)
@@ -19,15 +19,25 @@ Runiv=8.314472;
 
 %% Fuel computations
 
-Evalue = 10;          % E-number of the fuel
+Evalue = 0;          % E-number of the fuel
+Load = 0.5;
+
+Loadvalue =[0 0.5 1]; % no load, half load and full load
+p_intake_E0 = [27000 61300 101235]; % and their corresponding intake pressure values 
+p_intake_E5 = [27000 61200 101235];
+p_intake_E10 = [26912 61155 101235];
+
 
 % Qlvh = Amount of energy per mass of fuel (j)
 if Evalue == 0
-    Qlhv = 46.4e6;            
+    Qlhv = 46.4e6;
+    p0 = interp1(Loadvalue, p_intake_E0, Load);
 elseif Evalue == 5
     Qlhv = 45.58e6;               % Could not find a value on the internet, this is an approximation
+    p0 = interp1(Loadvalue, p_intake_E5, Load);
 elseif Evalue == 10
     Qlhv = 43.54e6;
+    p0 = interp1(Loadvalue, p_intake_E10, Load);
 end
 
 % Composition Ethanol
@@ -246,12 +256,12 @@ bsfc = m_fuel*1000/(W_E0/3600000);
 % title('Crank angle VC Volume');
 % grid on;
 % 
-figure;
-plot(Ca, Q_loss);
-xlabel('Crank angle');
-ylabel('Volume (m^3)');
-title('heat loss');
-grid on;
+% figure;
+% plot(Ca, Q_loss);
+% xlabel('Crank angle');
+% ylabel('Volume (m^3)');
+% title('heat loss');
+% grid on;
 % 
 % figure;
 % plot(Ca, p_motor2);
@@ -268,7 +278,6 @@ ylabel('Pressure (Pa)');
 % ylim([0, 12*10^6])
 title('pV-diagram for the complex cycle');
 grid on;
-
 % figure;
 % loglog(V, p);
 % xlabel('Volume (m^3)');
@@ -276,35 +285,35 @@ grid on;
 % title('pV-diagram for the complex cycle (Log-Log scale)'); 
 % grid on;
 % 
-figure;
-plot(Ca, T);
-xlabel('Crank angle (Ca)');
-ylabel('Temperature(K)');
-xlim([180; 540])
-title('Crank angle over Temperature');
-grid on;
+% figure;
+% plot(Ca, T);
+% xlabel('Crank angle (Ca)');
+% ylabel('Temperature(K)');
+% xlim([180; 540])
+% title('Crank angle over Temperature');
+% grid on;
 
-figure;
-plot(Ca, h_woschni);
-xlabel('Crank angle (Ca)');
-ylabel('transfer coefficient h');
-xlim([180; 540])
-title('Convective heat coefficient vs crank angle (WOSCHNI)');
-grid on;
-
-figure;
-plot(Ca, m);
-xlabel('Crank angle');
-ylabel('Mass');
-title('Mass vs crank angle'); 
-grid on;
-
-figure;
-plot(Ca, dQcomb);
-xlabel('Crank angle');
-ylabel('Heat from combustion');
-title('Heat from combustion vs crank angle'); 
-grid on;
+% figure;
+% plot(Ca, h_woschni);
+% xlabel('Crank angle (Ca)');
+% ylabel('transfer coefficient h');
+% xlim([180; 540])
+% title('Convective heat coefficient vs crank angle (WOSCHNI)');
+% grid on;
+% 
+% figure;
+% plot(Ca, m);
+% xlabel('Crank angle');
+% ylabel('Mass');
+% title('Mass vs crank angle'); 
+% grid on;
+% 
+% figure;
+% plot(Ca, dQcomb);
+% xlabel('Crank angle');
+% ylabel('Heat from combustion');
+% title('Heat from combustion vs crank angle'); 
+% grid on;
 
 
 % figure;
