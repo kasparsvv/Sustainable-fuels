@@ -17,51 +17,21 @@ run("Carburetor.m")
 global Runiv
 Runiv=8.314472;
 
+%% Fuel computations
 
-%% Determine load and E-value
-
-Evalue = 0;          % E-number of the fuel
-Load = 0;            %Determine load, either full (1), half (0.5) or no (0) load
+Evalue = 10;          % E-number of the fuel
 
 % Qlvh = Amount of energy per mass of fuel (j)
 if Evalue == 0
-    Qlhv = 46.4e6;
-    if Load == 1
-        p0 = 101235;            
-    elseif Load== 0.5
-        p0 = 61300;               
-    elseif Load == 0
-        p0 = 27000;
-    end
+    Qlhv = 46.4e6;            
 elseif Evalue == 5
     Qlhv = 45.58e6;               % Could not find a value on the internet, this is an approximation
-    if Load == 1
-        p0 = 101235;            
-    elseif Load== 0.5
-        p0 = 61200;               
-    elseif Load == 0
-        p0 = 27000;
-    end
 elseif Evalue == 10
     Qlhv = 43.54e6;
-    if Load == 1
-        p0 = 101235;            
-    elseif Load== 0.5
-        p0 = 61155;               
-    elseif Load == 0
-        p0 = 26912;
-    end
 end
 
-
-
-
-
-%% Fuel computations
-
-
 % Composition Ethanol
-cFuelEthanol = 'C2H5OH';        %Ethanol
+cFuelEthanol = 'C2H5OH';                                                 %Ethanol
 iSpEthanol = myfind({Sp.Name},{cFuelEthanol,'O2','CO2','H2O','N2'});     % Find indexes of these species
 SpSEthanol=Sp(iSpEthanol);                                               % Subselection of the database in the order according to {'Gasoline','O2','CO2','H2O','N2'}
 NSpEthanol = length(SpSEthanol);
@@ -81,9 +51,6 @@ MassOxygenE = MolesOxygenE*MiEthanol(2);    % The mass of this oxygen
 MassAirE = MassOxygenE + (MassOxygenE/Yair(2))*Yair(5); % Mass of air (Oxygen + Nitrogen)
 AirFuelRatioEthanol = MassAirE / 1;  % Air-fuel ratio for Ethanol
 
-
-
-
 % Composition Gasoline
 cFuelGasoline = 'Gasoline';
 iSpGasoline = myfind({Sp.Name},{cFuelGasoline,'O2','CO2','H2O','N2'});                    % Find indexes of these species
@@ -98,30 +65,14 @@ MolesGasoline = 1/MGasoline;                  % Amount of moles gasoline per mas
 MolesOxygenG = MolesGasoline*12.5;              % Amount of moles Oxygen for this amount of gasoline
 MassOxygenG = MolesOxygenG*MiGasoline(2);    % The mass of this oxygen
 MassAirG = MassOxygenG + (MassOxygenG/Yair(2))*Yair(5); % Mass of air (Oxygen + Nitrogen)
-%AirFuelRatioGasoline = MassAirG / 1;         % Air-fuel ratio for Gasoline 
-
-
 
 VolumeEthanol = Evalue/100;
 VolumeGasoline = (100-Evalue)/100;
 
 MassEthanol = DensityEthanol*VolumeEthanol;            % Ethanol = 789 kg/m^3
 MassGasoline = DensityGasoline*VolumeGasoline;          % Gasoline = 749 kg/m^3   
-%Mass fractions
-%MassFractionEthanol = MassEthanol/(MassEthanol+MassGasoline);
-%MassFractionGasoline = MassGasoline/(MassEthanol+MassGasoline);
-
-%MFuel = MassFractionEthanol*MEthanol + MassFractionGasoline*MGasoline;      % Molar mass of the fuel mixture
-%mfuel = 1;               %Fuel mass inside the cylinder, used for Qmodel, not defined yet
-
-%AirFuelRatio = MassFractionEthanol*AirFuelRatioEthanol + MassFractionGasoline*AirFuelRatioGasoline;     % Air-fuel ratio for the fuel mixture 
-%MFuelAir = MFuel + AirFuelRatio*MFuel;          % Mass of air = Air-Fuel ratio * Mass of the fuel
-
-%Rg = Runiv/MFuelAir;   %Specific gas constant
-%Rg = 290;
 
 %% Initialisation
-
 p(1) = p0;
 T(1) = T0;
 pad(1) = p(1);
@@ -129,12 +80,13 @@ Ca(1) = 0;
 V(1) = Vcyl(Ca(1),S,B,l,rc); % Vcyl is a function that computes cylinder volume as function of crank-angle for given B,S,l and rc
 m(1) = p(1)*V(1)/Rg_before_comb/T(1);
 Q_loss(1) = 0;
+
 gamma_comb_out = 1.236322380761674;
 gamma_comb_in = 1.360214357127973;
 
 Rg_before_comb = 2.744179546614579e+02;
 Rg_after_comb = 2.860747563192256e+02;
-
+Rg = (Rg_after_comb + Rg_before_comb)/2;
 
 for i = 1:NSteps+1
     Ca_i = (i - 1) * dCa;  % Current crank angle
@@ -177,9 +129,9 @@ for i=2:NSteps+1
        
     % Reference state
     if Ca(i) == 180
-        P_ref = p(360);
-        T_ref = T(360);
-        V_ref = V(360);
+        P_ref = p(180/dCa);
+        T_ref = T(180/dCa);
+        V_ref = V(180/dCa);
     end
 end
 
@@ -187,11 +139,11 @@ end
 for i=2:NSteps+1
     Ca(i)=Ca(i-1)+dCa;
     V(i)=Vcyl(Ca(i),S,B,l,rc); 
-    dV=V(i)-V(i-1); 
+    dV=V(i)-V(i-1);
 
     for n=1:5
-            Cvi(n) = CvNasa(T(360),SpSGasoline(n));
-            Cpi(n) = CpNasa(T(360),SpSGasoline(n));
+            Cvi(n) = CvNasa(T(180/dCa),SpSGasoline(n));
+            Cpi(n) = CpNasa(T(180/dCa),SpSGasoline(n));
     end
     Cv_comp_in = dot(Y_comp_in,Cvi);
     Cp_comp_in = dot(Y_comp_in,Cpi);
@@ -199,10 +151,10 @@ for i=2:NSteps+1
 
     % Compression
     if Ca(i) >= 180 && Ca(i) < 350
-        m(i) = p(1)*V(361)/(Rg_before_comb*T(1));
-        dT(i)=(-Q_loss(i-1) -p(i-1)*dV)/Cv_comp_in/m(i-1);
+        m(i) = m(i-1);
+        dT(i)=(-Q_loss(i-1) -p(i-1)*dV)/Cv_comp_in/m(i);
         T(i)=T(i-1)+dT(i);
-        p(i)=m(i)*Rg_before_comb*T(i)/V(i);  
+        p(i)=m(i)*Rg*T(i)/V(i);  
 
     end
 
@@ -210,36 +162,36 @@ for i=2:NSteps+1
     if Ca(i) >= 350 && Ca(i) <= 540
 
         for n=1:5
-        Cvi_comb_in(n) =CvNasa(T(720),SpSGasoline(n));
+        Cvi_comb_in(n) =CvNasa(T(350/dCa),SpSGasoline(n));
         end
         Cv_comb_in = dot(Y_comp_in,Cvi_comb_in);
         m(i) = m(i-1);        
-        m_fuel = m(365)/(1+AirFuelRatioGasoline);
+        m_fuel = m(i)/(1+AirFuelRatioGasoline);
         Q_LHV_E0 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,iSpGasoline, MiGasoline);
-        dQcomb(i) = QModel(Ca(i),CaS,CaD,m_fuel,Q_LHV_E0);
+        dQcomb(i) = QModel(Ca(i),CaS,CaD,m_fuel,Q_LHV_E0) * dCa;
 
         dT(i)=(dQcomb(i) - Q_loss(i-1) - p(i-1)*dV)/Cv_comb_in/m(i);
         T(i)=T(i-1)+dT(i);
-        p(i)=m(i)*Rg_before_comb*T(i)/V(i); 
-      
+        p(i)=m(i)*Rg*T(i)/V(i); 
+
+
+    % for n=1:5
+    %     Cvi_comb_out(n) = CvNasa(T(360/dCa),SpSGasoline(n));
+    %     Cpi_comb_out(n) = CpNasa(T(360/dCa),SpSGasoline(n));
+    % end
+    % Cv_comb_out = dot(Y_comb_out,Cvi_comb_out);
+    % Cp_comb_out = dot(Y_comb_out,Cpi_comb_out);
+
+    end
 
     for n=1:5
-        Cvi_comb_out(n) = CvNasa(T(721),SpSGasoline(n));
-        Cpi_comb_out(n) = CpNasa(T(721),SpSGasoline(n));
-    end
-    Cv_comb_out = dot(Y_comb_out,Cvi_comb_out);
-    Cp_comb_out = dot(Y_comb_out,Cpi_comb_out);
-
-    end
-
-    for n=1:5
-        Cvi_ps_out(n) =CvNasa(T(1080),SpSGasoline(n));
+        Cvi_ps_out(n) =CvNasa(T(540/dCa),SpSGasoline(n));
     end
     Cv_ps_out = dot(Y_comb_out,Cvi_ps_out);
 
     % Heat release
     if Ca(i) == 540      
-        m(i) = p(1)*V(361)/(Rg_after_comb*T(1));    
+        m(i) = p(1)*V(180/dCa)/(Rg*T(1));    
         p(i) = p(i-1);
         T(i) = T(i-1);
         Q_c = Cv_ps_out * m(i) * (T(i)-T(i-1));
@@ -249,35 +201,39 @@ for i=2:NSteps+1
     if Ca(i) >= 540 && Ca(i) <= 720
         p(i) = p(i-1);
         T(i) = T(i-1);
-        m(i) = p(i)*V(i)/Rg_after_comb/T(i);
+        m(i) = p(i)*V(i)/Rg/T(i);
     end
 
     % Closing cycle
     if Ca(i) >= 720
         p(i) = p0;
         T(i) = T0;
-        m(i) = p(i)*V(i)/Rg_before_comb/T(i);
+        m(i) = p(i)*V(i)/Rg/T(i);
     end
+
 
     % Heat loss
     A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
-    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out); % [Pa] Motorized cylinder pressure
+
+    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_in); % [Pa] Motorized cylinder pressure
+
     w(i) = B1(i)*S_p + B2(i)*(V_d*T_ref)/(P_ref*V_ref) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
+
     h_woschni(i) = 3.26 * B^(-0.2) * (p(i)/1000)^(0.8) * T(i)^(-0.55) * w(i)^0.8; % [W/(m^2*K)]
+
     Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 450); % [W] Convective heat loss to the inner cylinder wall
-    Q_loss(i) = Q_loss(i)/360/50; % [W] Convective heat loss to the inner cylinder wall
+
+    Q_loss(i) = Q_loss(i)/360/50 * dCa; % [W] Convective heat loss to the inner cylinder wall
 
 end
 
-
-heat = sum(dQcomb);
 %% Efficiency and Power Calculations
 RPM = 3000; % rounds per minute
 n_rpc = 2; %number of rounds per cycle
 
 W_E0= trapz(V,p);
 totaldQcomb = sum(dQcomb);
-efficiency = W_E0/totaldQcomb*100;
+efficiency = W_E0/totaldQcomb;
 P_E0 = W_E0 * (RPM/60) * (1/n_rpc);
 bsfc = m_fuel*1000/(W_E0/3600000);
 
@@ -309,6 +265,7 @@ figure;
 plot(V, p);
 xlabel('Volume (m^3)');
 ylabel('Pressure (Pa)');
+% ylim([0, 12*10^6])
 title('pV-diagram for the complex cycle');
 grid on;
 
@@ -334,6 +291,21 @@ ylabel('transfer coefficient h');
 xlim([180; 540])
 title('Convective heat coefficient vs crank angle (WOSCHNI)');
 grid on;
+
+figure;
+plot(Ca, m);
+xlabel('Crank angle');
+ylabel('Mass');
+title('Mass vs crank angle'); 
+grid on;
+
+figure;
+plot(Ca, dQcomb);
+xlabel('Crank angle');
+ylabel('Heat from combustion');
+title('Heat from combustion vs crank angle'); 
+grid on;
+
 
 % figure;
 % plot(Ca, h_hohenberg);
