@@ -1,5 +1,5 @@
-%clear all;
-%close all;
+clear all;
+close all;
 %% Load the NASA tables
 
 relativepath_to_generalfolder='General'; % relative reference to General folder (assumes the folder is in you working folder)
@@ -19,8 +19,8 @@ Runiv=8.314472;
 
 %% Fuel computations
 
-Evalue = 0;          % E-number of the fuel
-Load = 0.5;
+Evalue = 10;          % E-number of the fuel
+Load = 1;
 
 Loadvalue =[0 0.5 1]; % no load, half load and full load
 p_intake_E0 = [27000 61300 101235]; % and their corresponding intake pressure values 
@@ -271,13 +271,16 @@ bsfc = m_fuel*1000/(W_E0/3600000);
 % grid on;
 
 
-figure;
+
+%figure;
 plot(V, p);
 xlabel('Volume (m^3)');
 ylabel('Pressure (Pa)');
 % ylim([0, 12*10^6])
 title('pV-diagram for the complex cycle');
 grid on;
+hold on;
+
 % figure;
 % loglog(V, p);
 % xlabel('Volume (m^3)');
