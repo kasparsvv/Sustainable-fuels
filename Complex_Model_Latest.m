@@ -24,10 +24,12 @@ Load = 1;           % Load (value between 0 and 1)
 
 Loadvalue =[0 0.5 1]; % no load, half load and full load
 p_intake_E0 = [27000 61300 101235]; % and their corresponding intake pressure values 
+crankangle = [60 65 70];
 
 % Qlvh = Amount of energy per mass of fuel (j)
 Qlhv = 46.4e6;
 p0 = interp1(Loadvalue, p_intake_E0, Load);
+CaD = interp1(Loadvalue, crankangle, Load);
 
 % Composition Ethanol
 cFuelEthanol = 'C2H5OH';                                                 %Ethanol
@@ -261,14 +263,14 @@ bsfc = m_fuel*1000/(W_E0/3600000);
 
 
 
-%figure;
+figure;
 plot(V, p);
 xlabel('Volume (m^3)');
 ylabel('Pressure (Pa)');
 % ylim([0, 12*10^6])
 title('pV-diagram for the complex cycle');
 grid on;
-hold on;
+%hold on;
 
 % figure;
 % loglog(V, p);

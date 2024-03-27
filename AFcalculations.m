@@ -1,5 +1,5 @@
-clear all;
-close all;
+%clear all;
+%close all;
 relativepath_to_generalfolder='General'; % relative reference to General folder (assumes the folder is in you working folder)
 addpath(relativepath_to_generalfolder); 
 % Load Nasadatabase
