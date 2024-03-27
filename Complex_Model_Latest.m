@@ -10,7 +10,7 @@ load(TdataBase);
 run("AFcalculations.m");
 run("Fraction_calculations.m");
 run("system_parameters.m");
-run("Carburetor.m")
+run("Carburetor.m");
 
 %% Constants
 
@@ -19,26 +19,15 @@ Runiv=8.314472;
 
 %% Fuel computations
 
-Evalue = 10;          % E-number of the fuel
-Load = 1;
+Evalue = 0;          % E-number of the fuel
+Load = 1;           % Load (value between 0 and 1)
 
 Loadvalue =[0 0.5 1]; % no load, half load and full load
 p_intake_E0 = [27000 61300 101235]; % and their corresponding intake pressure values 
-p_intake_E5 = [27000 61200 101235];
-p_intake_E10 = [26912 61155 101235];
-
 
 % Qlvh = Amount of energy per mass of fuel (j)
-if Evalue == 0
-    Qlhv = 46.4e6;
-    p0 = interp1(Loadvalue, p_intake_E0, Load);
-elseif Evalue == 5
-    Qlhv = 45.58e6;               % Could not find a value on the internet, this is an approximation
-    p0 = interp1(Loadvalue, p_intake_E5, Load);
-elseif Evalue == 10
-    Qlhv = 43.54e6;
-    p0 = interp1(Loadvalue, p_intake_E10, Load);
-end
+Qlhv = 46.4e6;
+p0 = interp1(Loadvalue, p_intake_E0, Load);
 
 % Composition Ethanol
 cFuelEthanol = 'C2H5OH';                                                 %Ethanol

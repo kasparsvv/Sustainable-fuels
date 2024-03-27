@@ -20,17 +20,14 @@ Runiv=8.314472;
 %% Fuel computations
 
 Evalue = 10;          % E-number of the fuel
+Load = 1;           % Load (value between 0 and 1)
+
+Loadvalue =[0 0.5 1]; % no load, half load and full load
+p_intake_E10 = [26912 61155 101235];
 
 % Qlvh = Amount of energy per mass of fuel (j)
-if Evalue == 0
-    Qlhv = 46.4e6;            
-elseif Evalue == 5
-    Qlhv = 45.58e6;               % Could not find a value on the internet, this is an approximation
-elseif Evalue == 10
-    Qlhv = 43.54e6;
-end
-
-
+Qlhv = 43.54e6;
+p0 = interp1(Loadvalue, p_intake_E10, Load);
 
 % Composition Ethanol
 cFuelEthanol = 'C2H5OH';        %Ethanol
@@ -107,6 +104,7 @@ gamma_comb_in = 1.360165519141158;
 
 %Rg_before_comb = Rg_E10_before_comb;
 %Rg_after_comb = Rg_E10_after_comb;
+Rg = (Rg_E10_after_comb + Rg_E10_before_comb)/2;
 
 for i = 1:NSteps+1
     Ca_i = (i - 1) * dCa;  % Current crank angle
@@ -133,7 +131,8 @@ for i = 1:NSteps+1
     end
 end
 
-%% Loop over the crank angles using a For-loop
+
+%% Reference state + intake
 for i=2:NSteps+1
     Ca(i)=Ca(i-1)+dCa;
     V(i)=Vcyl(Ca(i),S,B,l,rc); 
@@ -144,12 +143,26 @@ for i=2:NSteps+1
         p(i) = p0;
         T(i) = T0;
         m(i) = p(i)*V(i)/Rg_E10_before_comb/T(i);
-
     end
+       
+    % Reference state
+    if Ca(i) == 180
+        P_ref = p(180/dCa);
+        T_ref = T(180/dCa);
+        V_ref = V(180/dCa);
+    end
+end
+
+%% Loop over the crank angles using a For-loop
+for i=2:NSteps+1
+    Ca(i)=Ca(i-1)+dCa;
+    V(i)=Vcyl(Ca(i),S,B,l,rc); 
+    dV=V(i)-V(i-1); 
+
 
     for n=1:6
-            Cvi(n) = CvNasa(T(360),SpSE5(n));
-            Cpi(n) = CpNasa(T(360),SpSE5(n));
+            Cvi(n) = CvNasa(T(180/dCa),SpSE5(n));
+            Cpi(n) = CpNasa(T(180/dCa),SpSE5(n));
     end
     Cv_comp_in = dot(Y_E10_comp_in,Cvi);
     Cp_comp_in = dot(Y_E10_comp_in,Cpi);
@@ -157,10 +170,10 @@ for i=2:NSteps+1
 
     % Compression
     if Ca(i) >= 180 && Ca(i) < 350
-        m(i) = p(1)*V(361)/(Rg_E10_before_comb*T(1));
-        dT(i)=(-Q_loss(i-1) -p(i-1)*dV)/Cv_comp_in/m(i-1);
+        m(i) = m(i-1);
+        dT(i)=(-Q_loss(i-1) -p(i-1)*dV)/Cv_comp_in/m(i);
         T(i)=T(i-1)+dT(i);
-        p(i)=m(i)*Rg_E10_before_comb*T(i)/V(i);  
+        p(i)=m(i)*Rg*T(i)/V(i);  
 
     end
 
@@ -168,31 +181,31 @@ for i=2:NSteps+1
     if Ca(i) >= 350 && Ca(i) <= 540
 
         for n=1:6
-        Cvi_comb_in(n) =CvNasa(T(720),SpSE5(n));
+        Cvi_comb_in(n) =CvNasa(T(350/dCa),SpSE5(n));
         end
         Cv_comb_in = dot(Y_E10_comp_in,Cvi_comb_in);
         m(i) = m(i-1);        
-        m_fuel = m(365)/(1+AirFuelRatioE10);
+        m_fuel = m(i)/(1+AirFuelRatioE10);
         Q_LHV_E10 = LowerHeatingValue(T_ref_QLHV,SpSGasoline,SpSEthanol, MassH20E10Gasoline, MassH20E10Ethanol,MassCO2E10Gasoline,MassCO2E10Ethanol,MassGasolineE10, MassEthanolE10);
-        dQcomb(i) = QModel(Ca(i),CaS,CaD,m_fuel,Q_LHV_E10);
+        dQcomb(i) = QModel(Ca(i),CaS,CaD,m_fuel,Q_LHV_E10) * dCa;
 
         dT(i)=(dQcomb(i) - Q_loss(i-1) - p(i-1)*dV)/Cv_comb_in/m(i);
         T(i)=T(i-1)+dT(i);
-        p(i)=m(i)*Rg_E10_before_comb*T(i)/V(i); 
+        p(i)=m(i)*Rg*T(i)/V(i); 
       
 
-    for n=1:6
-        Cvi_comb_out(n) = CvNasa(T(721),SpSE5(n));
-        Cpi_comb_out(n) = CpNasa(T(721),SpSE5(n));
-    end
-    Cv_comb_out = dot(Y_E10_comb_out,Cvi_comb_out);
-    Cp_comb_out = dot(Y_E10_comb_out,Cpi_comb_out);
+    %for n=1:6
+    %    Cvi_comb_out(n) = CvNasa(T(721),SpSE5(n));
+    %    Cpi_comb_out(n) = CpNasa(T(721),SpSE5(n));
+    %end
+    %Cv_comb_out = dot(Y_E10_comb_out,Cvi_comb_out);
+    %Cp_comb_out = dot(Y_E10_comb_out,Cpi_comb_out);
 
 
     end
 
     for n=1:6
-        Cvi_ps_out(n) =CvNasa(T(1080),SpSE5(n));
+        Cvi_ps_out(n) =CvNasa(T(540/dCa),SpSE5(n));
     end
     Cv_ps_out = dot(Y_E10_comb_out,Cvi_ps_out);
 
@@ -200,7 +213,7 @@ for i=2:NSteps+1
 
     % Heat release
     if Ca(i) == 540      
-        m(i) = p(1)*V(361)/(Rg_E10_after_comb*T(1));    
+        m(i) = p(1)*V(180/dCa)/(Rg*T(1));    
         p(i) = p(i-1);
         T(i) = T(i-1);
         Q_c = Cv_ps_out * m(i) * (T(i)-T(i-1));
@@ -210,27 +223,27 @@ for i=2:NSteps+1
     if Ca(i) >= 540 && Ca(i) <= 720
         p(i) = p(i-1);
         T(i) = T(i-1);
-        m(i) = p(i)*V(i)/Rg_E10_after_comb/T(i);
+        m(i) = p(i)*V(i)/Rg/T(i);
     end
 
     % Closing cycle
     if Ca(i) >= 720
         p(i) = p0;
         T(i) = T0;
-        m(i) = p(i)*V(i)/Rg_E10_before_comb/T(i);
+        m(i) = p(i)*V(i)/Rg/T(i);
     end
 
     A(i) = (pi/2)*B^2 + pi*B*(r*cosd(Ca(i)) + sqrt(l^2 - r^2*(sind(Ca(i))^2))); % [m^2] Instantaneous inner cylinder area 
 
-    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_out); % [Pa] Motorized cylinder pressure
+    p_motor2(i) = (P_ref * (V_ref/V(i))^gamma_comb_in); % [Pa] Motorized cylinder pressure
 
-    w(i) = B1(i)*S_p + B2(i)*((max(V))*T_ref)/(P_ref*V_ref) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
+    w(i) = B1(i)*S_p + B2(i)*(V_d*T_ref)/(P_ref*V_ref) * (p(i) - p_motor2(i)); % [m/s] Effective gas velocity
 
     h_woschni(i) = 3.26 * B^(-0.2) * (p(i)/1000)^(0.8) * T(i)^(-0.55) * w(i)^0.8; % [W/(m^2*K)]
 
-    Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 330); % [W] Convective heat loss to the inner cylinder wall
+    Q_loss(i) = h_woschni(i) * A(i) * (T(i) - 450); % [W] Convective heat loss to the inner cylinder wall
 
-    Q_loss(i) = Q_loss(i)/360/50; % [W] Convective heat loss to the inner cylinder wall
+    Q_loss(i) = Q_loss(i)/360/50 * dCa; % [W] Convective heat loss to the inner cylinder wall
 
 end
 
